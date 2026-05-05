@@ -17,9 +17,6 @@
 - [Архитектура](#️-архитектура)
 - [Как это работает](#-как-это-работает)
 - [Быстрый запуск (Google Colab)](#-быстрый-запуск-google-colab)
-- [Локальная установка](#-локальная-установка)
-- [Взаимодействие с системой](#-взаимодействие-с-системой)
-- [Структура проекта](#-структура-проекта)
 - [Используемые источники](#-используемые-источники)
 - [Документация](#-документация)
 
@@ -89,68 +86,6 @@ flowchart LR
 3. Через ~20 минут вы получите файлы `meta_features.csv`,
    `cvi_distribution.png` и сохранённую модель.
 
-## 💻 Локальная установка
-
-Требования: Python 3.10+, CUDA‑совместимый GPU (опционально для ускорения).
-
-```bash
-git clone https://github.com/seregamuravyov/ClustMetaLearn.git
-cd ClustMetaLearn
-pip install -r requirements.txt
-```
-
-Затем запустите Jupyter Notebook и откройте `notebooks/full_pipeline.ipynb`.
-
-## 🎮 Взаимодействие с системой
-
-### 1. Запуск скрипта извлечения мета‑признаков (CLI)
-
-Для профилирования одного табличного файла можно использовать скрипт
-`extract_table_metadata.py`, написанный в соавторстве с Данилом Вишняковым:
-
-```bash
-python extract_table_metadata.py path/to/dataset.csv --output profile.json
-```
-
-Он выдаёт детальный поколоночный разбор: типы признаков, разброс масштабов,
-пропуски, подсказки для выбора алгоритма.
-
-### 2. Интеграция в Python‑код
-
-```python
-from clm_meta_learn import ClustMetaLearner
-
-learner = ClustMetaLearner()
-learner.load_pretrained("models/cvisel_rf.pkl")
-
-# data: pandas DataFrame или numpy array
-best_cvi = learner.recommend_cvi(data)
-print(f"Рекомендованный индекс качества: {best_cvi}")
-```
-
-## 📁 Структура проекта
-
-```text
-ClustMetaLearn/
-├── docs/                           # Документация и архитектурные описания
-│   ├── research_proposal.md        # Полный текст Research Proposal
-│   └── sprint2_report.md           # Отчёт по Спринту №2
-├── notebooks/                      # Основные рабочие блокноты
-│   ├── 01_data_loading.ipynb       # Загрузка и CLM‑фильтрация
-│   └── full_pipeline.ipynb         # Полный пайплайн (мета‑признаки + модель)
-├── src/                            # Исходный код модулей
-│   ├── meta_features.py            # Извлечение мета‑признаков (GPU)
-│   ├── cvi_model.py                # Обучение и инференс CVIsel
-│   └── clustering_utils.py         # Генерация разбиений, подсчёт ARI
-├── data/                           # Сгенерированные CSV‑файлы
-│   ├── meta_features.csv
-│   ├── meta_val_with_predictions.csv
-│   └── meta_test_with_predictions.csv
-├── models/                         # Сохранённые модели
-│   └── cvisel_rf.pkl
-├── requirements.txt                # Python‑зависимости
-└── README.md                       # Этот файл
-```
 
 ## 🔗 Используемые источники
 
