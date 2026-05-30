@@ -1,0 +1,2 @@
+[console_scripts]
+clust-tpot-clustering = clustmetalearn.tpot_clustering.cli:main
