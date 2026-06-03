@@ -1,4 +1,4 @@
-"""python -m clustmetalearn.tpot_clustering entry point."""
+"""Module entry point."""
 
 from clustmetalearn.tpot_clustering.cli import main
 

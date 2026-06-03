@@ -11,6 +11,10 @@ Requires-Dist: deap>=1.4
 Requires-Dist: joblib>=1.3
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0; extra == "dev"
+Provides-Extra: mlflow
+Requires-Dist: mlflow>=2.9; extra == "mlflow"
+Provides-Extra: docker
+Requires-Dist: mlflow>=2.9; extra == "docker"
 
 # 🧩 ClustMetaLearn
 

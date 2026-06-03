@@ -6,28 +6,25 @@ from typing import Literal
 
 import numpy as np
 from sklearn.base import clone
-from sklearn.metrics import (
-    adjusted_rand_score,
-    calinski_harabasz_score,
-    davies_bouldin_score,
-    silhouette_score,
-)
+from sklearn.metrics import adjusted_rand_score, silhouette_score
 from sklearn.model_selection import KFold
 
+from clustmetalearn.tpot_clustering.cvi import (
+    calinski_harabasz_fast,
+    davies_bouldin_fast,
+    silhouette_centroid_fast,
+)
 from clustmetalearn.tpot_clustering.encoding import SearchSpace, individual_to_pipeline
 
-MetricName = Literal["silhouette", "calinski_harabasz", "davies_bouldin", "ari"]
+MetricName = Literal[
+    "silhouette",
+    "silhouette_exact",
+    "calinski_harabasz",
+    "davies_bouldin",
+    "ari",
+]
 
 _BAD = -1e9
-
-
-def _safe_silhouette(X, labels) -> float:
-    if len(np.unique(labels)) < 2:
-        return np.nan
-    n = X.shape[0]
-    if n < 3:
-        return np.nan
-    return float(silhouette_score(X, labels))
 
 
 def _score_labels(
@@ -40,16 +37,23 @@ def _score_labels(
         if y_val is None:
             return np.nan
         return float(adjusted_rand_score(y_val, labels))
+
     if metric == "silhouette":
-        return _safe_silhouette(X_val, labels)
+        return silhouette_centroid_fast(X_val, labels)
+
+    if metric == "silhouette_exact":
+        uniq = np.unique(labels)
+        if uniq.size < 2 or X_val.shape[0] < 3:
+            return np.nan
+        return float(silhouette_score(X_val, labels))
+
     if metric == "calinski_harabasz":
-        if len(np.unique(labels)) < 2:
-            return np.nan
-        return float(calinski_harabasz_score(X_val, labels))
+        return calinski_harabasz_fast(X_val, labels)
+
     if metric == "davies_bouldin":
-        if len(np.unique(labels)) < 2:
-            return np.nan
-        return -float(davies_bouldin_score(X_val, labels))
+        s = davies_bouldin_fast(X_val, labels)
+        return -s if np.isfinite(s) else np.nan
+
     raise ValueError(f"Unknown metric: {metric}")
 
 

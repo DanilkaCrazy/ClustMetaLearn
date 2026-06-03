@@ -18,6 +18,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
+mlflow = ["mlflow>=2.9"]
+docker = [
+    "mlflow>=2.9",
+]
 
 [project.scripts]
 clust-tpot-clustering = "clustmetalearn.tpot_clustering.cli:main"

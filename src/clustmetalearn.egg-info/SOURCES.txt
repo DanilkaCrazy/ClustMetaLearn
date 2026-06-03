@@ -9,9 +9,16 @@ src/clustmetalearn.egg-info/requires.txt
 src/clustmetalearn.egg-info/top_level.txt
 src/clustmetalearn/tpot_clustering/__init__.py
 src/clustmetalearn/tpot_clustering/__main__.py
+src/clustmetalearn/tpot_clustering/bandits.py
 src/clustmetalearn/tpot_clustering/cli.py
+src/clustmetalearn/tpot_clustering/cvi.py
 src/clustmetalearn/tpot_clustering/encoding.py
 src/clustmetalearn/tpot_clustering/evolve.py
 src/clustmetalearn/tpot_clustering/fitness.py
+src/clustmetalearn/tpot_clustering/mlflow_tracking.py
+src/clustmetalearn/tpot_clustering/ranking.py
 src/clustmetalearn/tpot_clustering/wrappers.py
+tests/test_bandits.py
+tests/test_cvi_fast.py
+tests/test_mlflow_tracking.py
 tests/test_tpot_clustering.py

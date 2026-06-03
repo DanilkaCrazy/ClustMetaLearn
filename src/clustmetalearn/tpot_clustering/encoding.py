@@ -49,15 +49,7 @@ def individual_to_pipeline(
     space: SearchSpace,
     random_state: int,
 ) -> Pipeline:
-    """
-    Genome layout:
-      [0] use StandardScaler (0/1)
-      [1] use PCA after scaler block (0/1)
-      [2] PCA n_components
-      [3] algorithm: 0 KMeans, 1 Agglomerative, 2 GaussianMixture, 3 MiniBatchKMeans
-      [4] n_clusters (or GMM n_components)
-      [5] linkage index (Agglomerative only; ignored otherwise)
-    """
+    """Compile genome [scaler, pca, pca_n, algo, n_clusters, linkage] to Pipeline."""
     if len(individual) != 6:
         raise ValueError("Expected genome of length 6")
     g = individual[:]

@@ -10,11 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 
 
 class AgglomerativeWithPredict(BaseEstimator, ClusterMixin):
-    """
-    AgglomerativeClustering on fit data, validation points assigned by nearest
-    training cluster centroid (Euclidean). Needed because native
-    AgglomerativeClustering lacks predict() in many sklearn versions.
-    """
+    """Agglomerative clustering with predict via nearest train centroid."""
 
     def __init__(self, n_clusters: int = 2, linkage: str = "ward"):
         self.n_clusters = n_clusters

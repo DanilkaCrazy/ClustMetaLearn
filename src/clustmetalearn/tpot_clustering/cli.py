@@ -44,7 +44,7 @@ def _load_xy(csv_path: str, label_column: str | None) -> tuple[np.ndarray, np.nd
 
 def build_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="Evolve a sklearn clustering pipeline from a CSV (ClustMetaLearn / DEAP).",
+        description="Evolve a sklearn clustering pipeline from CSV.",
     )
     p.add_argument("csv_path", help="Path to CSV with numeric features.")
     p.add_argument(
@@ -55,18 +55,91 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--metric",
-        choices=["silhouette", "calinski_harabasz", "davies_bouldin", "ari"],
+        choices=[
+            "silhouette",
+            "silhouette_exact",
+            "calinski_harabasz",
+            "davies_bouldin",
+            "ari",
+        ],
         default=None,
-        help="Fitness metric. Default: silhouette without labels, ari with --label-column.",
+        help="Fitness metric (default: silhouette or ari if --label-column).",
     )
     p.add_argument("--generations", type=int, default=15)
     p.add_argument("--population", type=int, default=40)
     p.add_argument("--cv", type=int, default=3, help="KFold splits (>=2).")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument(
+        "--bandit",
+        choices=["none", "ucb1", "softmax"],
+        default="none",
+        help="MAB policy for algorithm gene (none, ucb1, softmax).",
+    )
+    p.add_argument(
+        "--bandit-bias",
+        type=float,
+        default=0.5,
+        help="Probability of setting algo gene from bandit on init/mutation (0=uniform).",
+    )
+    p.add_argument(
+        "--bandit-temperature",
+        type=float,
+        default=1.0,
+        help="Softmax temperature (only for --bandit softmax).",
+    )
+    p.add_argument(
+        "--bandit-ucb-c",
+        type=float,
+        default=1.4142135623730951,
+        help="UCB1 exploration constant (only for --bandit ucb1).",
+    )
+    p.add_argument(
+        "--ranking-trick",
+        action="store_true",
+        help="Pre-rank oversampled candidates with a pairwise ranker.",
+    )
+    p.add_argument(
+        "--ranking-warmup",
+        type=int,
+        default=30,
+        help="Number of evaluated individuals before fitting the ranker.",
+    )
+    p.add_argument(
+        "--ranking-oversample",
+        type=int,
+        default=3,
+        help="Candidate pool multiplier per generation (only used when --ranking-trick).",
+    )
+    p.add_argument(
+        "--ranking-max-pairs",
+        type=int,
+        default=2000,
+        help="Maximum number of random pairs to train the pairwise ranker on.",
+    )
+    p.add_argument(
         "--output-pipeline",
         default=None,
         help="Optional path to save best pipeline (joblib).",
+    )
+    p.add_argument(
+        "--mlflow",
+        action="store_true",
+        help="Log run to MLflow.",
+    )
+    p.add_argument(
+        "--mlflow-tracking-uri",
+        default=None,
+        help="MLflow tracking URI (default: MLFLOW_TRACKING_URI env or sqlite:///./mlruns/mlflow.db).",
+    )
+    p.add_argument(
+        "--mlflow-experiment",
+        default="clustmetalearn-tpot",
+        help="MLflow experiment name.",
+    )
+    p.add_argument(
+        "--mlflow-run-name",
+        default=None,
+        help="Optional MLflow run name.",
     )
     return p
 
@@ -95,11 +168,24 @@ def main(argv: list[str] | None = None) -> None:
         cv_splits=args.cv,
         random_state=args.seed,
         metric=metric,
+        bandit=args.bandit,
+        bandit_bias=args.bandit_bias,
+        bandit_temperature=args.bandit_temperature,
+        bandit_ucb_c=args.bandit_ucb_c,
+        ranking_trick=args.ranking_trick,
+        ranking_warmup=args.ranking_warmup,
+        ranking_oversample=args.ranking_oversample,
+        ranking_max_pairs=args.ranking_max_pairs,
     )
 
     result = run_evolution(X, y_eval, space, config)
     print("Best CV score (higher is better):", result.best_fitness)
     print("Best genome:", result.best_individual)
+    if result.bandit_arm_pulls is not None:
+        print(
+            "Bandit arm pulls (KMeans, Agglo, GMM, MiniBatch):",
+            result.bandit_arm_pulls,
+        )
     print("Best pipeline:")
     print(result.best_pipeline)
 
@@ -108,6 +194,22 @@ def main(argv: list[str] | None = None) -> None:
 
         joblib.dump(result.best_pipeline, args.output_pipeline)
         print("Saved:", args.output_pipeline)
+
+    if args.mlflow:
+        from clustmetalearn.tpot_clustering.mlflow_tracking import log_evolution_run
+
+        run_id = log_evolution_run(
+            result,
+            config,
+            tracking_uri=args.mlflow_tracking_uri,
+            experiment_name=args.mlflow_experiment,
+            run_name=args.mlflow_run_name,
+            csv_path=args.csv_path,
+            n_samples=X.shape[0],
+            n_features=X.shape[1],
+            pipeline_path=args.output_pipeline,
+        )
+        print("MLflow run id:", run_id)
 
 
 if __name__ == "__main__":
