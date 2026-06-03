@@ -1,3 +1,3 @@
 """ClustMetaLearn: meta-learning and evolutionary clustering toolkit."""
 
-__all__ = ["tpot_clustering"]
+__all__ = ["meta", "tpot_clustering"]

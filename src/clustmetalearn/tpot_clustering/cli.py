@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -141,6 +142,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional MLflow run name.",
     )
+    p.add_argument(
+        "--cvisel-models-dir",
+        default=None,
+        help="Directory with trained CVIsel (models/); sets --metric from meta-model.",
+    )
     return p
 
 
@@ -148,16 +154,24 @@ def main(argv: list[str] | None = None) -> None:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
+    X, y_eval = _load_xy(args.csv_path, args.label_column)
+
     metric: MetricName
-    if args.metric is None:
-        metric = "ari" if args.label_column else "silhouette"
-    else:
+    if args.metric is not None:
         metric = args.metric  # type: ignore[assignment]
+    elif args.cvisel_models_dir:
+        from clustmetalearn.tpot_clustering.cvisel_bridge import metric_from_cvisel
+
+        metric = metric_from_cvisel(X, Path(args.cvisel_models_dir))
+        print("CVIsel metric:", metric)
+    elif args.label_column:
+        metric = "ari"
+    else:
+        metric = "silhouette"
 
     if metric == "ari" and args.label_column is None:
         raise SystemExit("Metric 'ari' requires --label-column.")
 
-    X, y_eval = _load_xy(args.csv_path, args.label_column)
     if X.shape[0] < args.cv + 1:
         raise SystemExit(f"Need more rows than CV folds ({args.cv}). Got n_samples={X.shape[0]}.")
 

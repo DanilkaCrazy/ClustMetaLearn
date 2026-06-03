@@ -22,9 +22,11 @@ mlflow = ["mlflow>=2.9"]
 docker = [
     "mlflow>=2.9",
 ]
+topo = ["ripser>=0.6"]
 
 [project.scripts]
 clust-tpot-clustering = "clustmetalearn.tpot_clustering.cli:main"
+clust-meta = "clustmetalearn.meta.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -15,6 +15,8 @@ Provides-Extra: mlflow
 Requires-Dist: mlflow>=2.9; extra == "mlflow"
 Provides-Extra: docker
 Requires-Dist: mlflow>=2.9; extra == "docker"
+Provides-Extra: topo
+Requires-Dist: ripser>=0.6; extra == "topo"
 
 # 🧩 ClustMetaLearn
 

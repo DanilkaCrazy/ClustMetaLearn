@@ -12,3 +12,6 @@ mlflow>=2.9
 
 [mlflow]
 mlflow>=2.9
+
+[topo]
+ripser>=0.6
