@@ -13,7 +13,7 @@ from clustmetalearn.meta.features import extract_meta_features
 from clustmetalearn.meta.labels import best_algorithm_for_dataset
 from clustmetalearn.meta.models import load_bundle, save_bundle, train_cvisel
 from clustmetalearn.meta.models import MetaModelBundle
-from clustmetalearn.meta.recommend import recommend_from_features
+from clustmetalearn.meta.recommend import recommend_from_bin, recommend_from_features
 from clustmetalearn.meta.train import train_meta_models
 from clustmetalearn.tpot_clustering.cvisel_bridge import metric_from_cvisel
 
@@ -75,6 +75,17 @@ def test_recommend_and_cvisel_bridge(tmp_path: Path):
     assert rec.predicted_cvi in classes
     metric = metric_from_cvisel(X, tmp_path / "m")
     assert metric in ("silhouette", "calinski_harabasz", "davies_bouldin")
+
+    bin_path = tmp_path / "data.bin"
+    X.astype(np.float32).tofile(bin_path)
+    rec_bin = recommend_from_bin(
+        str(bin_path),
+        tmp_path / "m",
+        n_samples=X.shape[0],
+        n_features=X.shape[1],
+        include_topology=False,
+    )
+    assert rec_bin.predicted_cvi in classes
 
 
 def test_topo_ablation_runs():

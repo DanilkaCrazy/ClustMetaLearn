@@ -94,3 +94,39 @@ def test_cli_runs_on_synthetic_csv(tmp_path: Path):
     r = subprocess.run(cmd, cwd=repo, env=env, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr + r.stdout
     assert "Best CV score" in r.stdout
+
+
+def test_cli_runs_on_synthetic_bin(tmp_path: Path):
+    X, y = make_blobs(n_samples=90, centers=3, n_features=2, random_state=6)
+    data_path = tmp_path / "data.bin"
+    label_path = tmp_path / "label.bin"
+    X.astype(np.float32).tofile(data_path)
+    y.astype(np.int32).tofile(label_path)
+    repo = Path(__file__).resolve().parents[1]
+    cmd = [
+        sys.executable,
+        "-m",
+        "clustmetalearn.tpot_clustering",
+        str(data_path),
+        "--input-format",
+        "bin",
+        "--n-samples",
+        str(X.shape[0]),
+        "--n-features",
+        str(X.shape[1]),
+        "--label-bin",
+        str(label_path),
+        "--metric",
+        "ari",
+        "--generations",
+        "1",
+        "--population",
+        "6",
+        "--cv",
+        "3",
+    ]
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(repo / "src")
+    r = subprocess.run(cmd, cwd=repo, env=env, capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr + r.stdout
+    assert "Best CV score" in r.stdout

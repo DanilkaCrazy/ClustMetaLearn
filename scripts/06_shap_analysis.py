@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import joblib
 import pandas as pd
-import numpy as np
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,25 +8,51 @@ DATA_DIR = BASE_DIR / "data"
 MODELS_DIR = BASE_DIR / "models"
 
 def main():
-    print("[Шаг 6] XAI-анализ: Расчет SHAP важности признаков...")
-    
-    if not (MODELS_DIR / "cvisel_rf.pkl").exists():
-        print("❌ Ошибка: нет обученной модели.")
-        return
-        
-    features = open(MODELS_DIR / "feature_cols.txt").read().strip().split("\n")
-    model = joblib.load(MODELS_DIR / "cvisel_rf.pkl")
-    
-    # Симулируем агрегированные SHAP-значения на основе feature_importances_
-    df_shap = pd.DataFrame({
-        "meta_feature": features,
-        "mean_abs_shap_value": model.feature_importances_ * 0.95 + np.random.uniform(0.001, 0.005, len(features))
-    }).sort_values(by="mean_abs_shap_value", ascending=False)
-    
-    print("\nВажность мета-признаков по SHAP:")
-    print(df_shap.to_string(index=False))
-    df_shap.to_csv(DATA_DIR / "feature_importance_cvisel.csv", index=False)
-    print("[Шаг 6 SUCCESS] Спецификация объяснимого ИИ (XAI) сохранена.")
+    print("[Шаг 6] Интерпретация важности мета-признаков...")
+    rows = []
+    candidates = [
+        ("cvisel", MODELS_DIR / "cvisel.joblib"),
+        ("algrank", MODELS_DIR / "algrank.joblib"),
+        ("ari_surrogate", MODELS_DIR / "ari_surrogate.pkl"),
+    ]
+    features = []
+    feature_file = MODELS_DIR / "feature_cols.txt"
+    if feature_file.exists():
+        features = feature_file.read_text(encoding="utf-8").strip().splitlines()
+
+    meta_json = MODELS_DIR / "meta.json"
+    if meta_json.exists() and not features:
+        import json
+
+        features = json.loads(meta_json.read_text(encoding="utf-8")).get("feature_cols", [])
+
+    for model_name, path in candidates:
+        if not path.exists():
+            continue
+        model = joblib.load(path)
+        if not hasattr(model, "feature_importances_"):
+            continue
+        model_features = features
+        if model_name in ("cvisel", "algrank") and meta_json.exists():
+            import json
+
+            model_features = json.loads(meta_json.read_text(encoding="utf-8")).get("feature_cols", features)
+        for feature, importance in zip(model_features, model.feature_importances_, strict=False):
+            rows.append(
+                {
+                    "model": model_name,
+                    "meta_feature": feature,
+                    "importance": float(importance),
+                }
+            )
+
+    if not rows:
+        raise FileNotFoundError("Нет моделей с feature_importances_.")
+
+    df_importance = pd.DataFrame(rows).sort_values(["model", "importance"], ascending=[True, False])
+    print(df_importance.to_string(index=False))
+    df_importance.to_csv(DATA_DIR / "feature_importance_cvisel.csv", index=False)
+    print("[Шаг 6 SUCCESS] Важность признаков сохранена.")
 
 if __name__ == "__main__":
     main()

@@ -23,8 +23,14 @@
   ],
   "cvi_classes": [
     "Calinski-Harabasz",
+    "Davies-Bouldin",
     "Silhouette"
   ],
-  "algo_classes": [],
+  "algo_classes": [
+    "agglomerative",
+    "gmm",
+    "kmeans",
+    "minibatch_kmeans"
+  ],
   "use_topo": true
 }

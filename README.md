@@ -1,102 +1,149 @@
-# 🧩 ClustMetaLearn
+# ClustMetaLearn
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?logo=pytorch)](https://pytorch.org/)
-[![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.2+-F7931E?logo=scikit-learn)](https://scikit-learn.org/)
-[![Google Colab](https://img.shields.io/badge/Colab-Open%20Notebook-F9AB00?logo=googlecolab)](https://colab.research.google.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+ClustMetaLearn подбирает стратегию кластеризации для табличных данных. На вход
+подаётся новый датасет, а система:
 
-**ClustMetaLearn** — это мета‑обучаемая система автоматического выбора алгоритмов
-кластеризации и внутренних мер качества разбиения (CVI) для табличных данных.
-Она использует расширенные мета‑признаки (статистические, информационные,
-топологические), фильтрацию по индексу Cluster‑Label Matching (CLM) и
-ансамблевые модели для рекомендации наилучшей стратегии кластеризации.
+1. считает мета-признаки датасета;
+2. рекомендует внутреннюю метрику качества кластеризации;
+3. рекомендует семейство алгоритма кластеризации;
+4. сужает диапазон гиперпараметров;
+5. при необходимости запускает эволюционный подбор полного пайплайна.
 
-## 📋 Содержание
+Проект поддерживает два формата входных данных:
 
-- [Архитектура](#️-архитектура)
-- [Как это работает](#-как-это-работает)
-- [Быстрый запуск (Google Colab)](#-быстрый-запуск-google-colab)
-- [Используемые источники](#-используемые-источники)
-- [Документация](#-документация)
+- `CSV` — удобный формат для обычной работы;
+- `.bin` — бинарная матрица признаков `float32`, совместимая с бенчмарком
+  `hj-n/labeled-datasets`.
 
-## 🏗️ Архитектура
+`.bin` не обязателен для нового датасета. Он нужен, если данные уже лежат в
+таком формате или если нужно воспроизвести бенчмарк из `labeled-datasets`.
+Для `.bin` обязательно указывать форму матрицы: `n_samples` и `n_features`,
+потому что сам файл её не хранит.
 
-```mermaid
-flowchart LR
-    A["Табличный датасет\n(CSV, .bin)"] --> B["Предобработка\n+ CLM-оценка"]
-    B --> C["Извлечение мета-признаков\n(stat, info, topo)"]
-    C --> D["Мета-модель CVIsel\n(Random Forest)"]
-    D --> E["Рекомендация CVI\n(Silhouette / CH)"]
-    E --> F["Отчёт и визуализация"]
-    
-    G[("96 Labeled Datasets\n(hj-n/labeled-datasets)")] -.-> B
-    H[("Adjusted IVMs\n(hj-n/clm)")] -.-> B
-    I[("CLM Scores\n(hyeonword.com/clm-datasets)")] -.-> B
+## Установка
+
+```bash
+pip install -e ".[dev]"
 ```
 
-Система построена как модульный пайплайн: после загрузки и CLM‑фильтрации
-данных из публичного репозитория вычисляются мета‑признаки трёх типов,
-которые подаются на вход классификатору, предсказывающему наиболее
-подходящий внутренний индекс качества (CVI). Дальнейшие спринты добавляют
-ранжирование алгоритмов и сужение пространства гиперпараметров.
+Для топологических признаков:
 
-## ⚙️ Как это работает
+```bash
+pip install -e ".[topo]"
+```
 
-1. **Загрузка и CLM‑фильтрация**  
-   Из репозитория [`hj-n/labeled-datasets`](https://github.com/hj-n/labeled-datasets)
-   загружаются 96 табличных датасетов в бинарном формате. Для каждого набора
-   используется предварительно вычисленный Adjusted Calinski‑Harabasz Index (CH_A),
-   опубликованный на сайте [hyeonword.com/clm-datasets](https://hyeonword.com/clm-datasets).
-   Датасеты разбиваются на три группы по уровню CLM: верхний терциль – обучение,
-   средний – валидация, нижний – тестирование.
+## Полный исследовательский пайплайн
 
-2. **Извлечение мета‑признаков**  
-   Для каждого датасета вычисляются три группы признаков, ускоренные на GPU:
-   - **Статистические**: число объектов/признаков, моменты, PCA.
-   - **Информационно‑теоретические**: энтропия Шеннона, взаимная информация.
-   - **Топологические**: числа Бетти, персистентная энтропия (на основе
-     библиотеки `ripser`).
+```bash
+python run_pipeline.py
+```
 
-3. **Целевые метки (best CVI)**  
-   Для обучающего набора запускаются алгоритмы K‑Means и аггломеративной
-   кластеризации с разными параметрами. Вычисляются внутренние меры
-   (Silhouette, Calinski‑Harabasz, Davies‑Bouldin) и внешний индекс ARI.
-   Лучшим CVI считается тот, который имеет наибольшую корреляцию Спирмена
-   с ARI.
+Этот запуск последовательно выполняет:
 
-4. **Обучение мета‑модели CVIsel**  
-   На векторах мета‑признаков и целевых метках обучается Random Forest
-   (точность на кросс‑валидации около 88%). Модель способна предсказать
-   оптимальный CVI для новых датасетов.
+1. подготовку сводки датасетов и CLM-разбиения;
+2. нормализацию таблиц с мета-признаками;
+3. обучение CVIsel и AlgRank;
+4. обучение суррогатной модели ARI;
+5. подбор гиперпараметров;
+6. проверку стратегий при ограничении по времени;
+7. интерпретацию важности признаков;
+8. проверку на доменных примерах Bio/Text.
 
-5. **Визуализация и анализ**  
-   Строятся кривые обучения, матрица ошибок, важность признаков, t‑SNE
-   проекция. Все результаты сохраняются в CSV‑файлы и PNG‑изображения.
+```mermaid
+flowchart TB
+    inputData["CSV or data.bin"] --> features["Meta-features"]
+    features --> cvisel["CVIsel"]
+    features --> algRank["AlgRank"]
+    features --> surrogate["ARI surrogate"]
+    cvisel --> search["SMBO or evolutionary search"]
+    algRank --> search
+    surrogate --> search
+    search --> report["Reports and artifacts"]
+```
 
-## 🚀 Быстрый запуск (Google Colab)
+## Рекомендация для нового датасета
 
-1. Откройте основной блокнот в Google Colab:  
-   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/seregamuravyov/ClustMetaLearn/blob/main/notebooks/full_pipeline.ipynb)
+### CSV
 
-2. Выполните ячейки последовательно – установка библиотек, клонирование
-   репозитория `labeled-datasets`, извлечение мета‑признаков и обучение модели
-   будут выполнены автоматически.
+```bash
+clust-meta recommend path/to/data.csv --models-dir models
+```
 
-3. Через ~20 минут вы получите файлы `meta_features.csv`,
-   `cvi_distribution.png` и сохранённую модель.
+Если в CSV есть колонка с метками и её нужно исключить из признаков:
 
+```bash
+clust-meta recommend path/to/data.csv --models-dir models --label-column label
+```
 
-## 🔗 Используемые источники
+### data.bin
 
-| Ресурс | Описание |
-|--------|----------|
-| [hj‑n/labeled‑datasets](https://github.com/hj-n/labeled-datasets) | Исходный репозиторий с 96 размеченными датасетами в формате `.bin` |
-| [hj‑n/clm](https://github.com/hj-n/clm) | Реализация Adjusted Internal Validation Measures (CHₐ, SCₐ и др.) |
-| [hyeonword.com/clm‑datasets](https://hyeonword.com/clm-datasets) | Публичный CLM‑рейтинг всех 96 датасетов |
-| H. Jeon et al., *Measuring the Validity of Clustering Validation Datasets*, IEEE TVCG, 2025 | Основополагающая статья, вводящая понятие CLM и Adjusted IVMs |
-| O. Arbelaitz et al., *An extensive comparative study of cluster validity indices*, Pattern Recognition, 2013 | Обзор и сравнение 30 CVI |
-| D. G. Ferrari, L. N. de Castro, *Clustering algorithm selection by meta‑learning systems*, Information Sciences, 2015 | Дистанционные мета‑признаки и методы комбинации рангов |
-| S. Muravyov et al., *Efficient Computation of Fitness Function for Evolutionary Clustering*, MENDEL, 2019 | Инкрементальный пересчёт CVI |
-| С. Б. Муравьёв, *Система автоматического выбора и оценки алгоритмов кластеризации и их параметров*, диссертация, ИТМО, 2019 | Комплексный подход к автоматизации кластеризации (Meta‑CVI, MASS‑CAH, (1+1) EA) |
+```bash
+clust-meta recommend path/to/data.bin \
+  --input-format bin \
+  --n-samples 1000 \
+  --n-features 20 \
+  --models-dir models
+```
+
+Файл `data.bin` читается как плоский массив `float32` и преобразуется в матрицу
+`n_samples x n_features`.
+
+## Эволюционный подбор пайплайна
+
+### CSV
+
+```bash
+python -m clustmetalearn.tpot_clustering path/to/data.csv \
+  --cvisel-models-dir models \
+  --generations 10 \
+  --population 20
+```
+
+### data.bin
+
+```bash
+python -m clustmetalearn.tpot_clustering path/to/data.bin \
+  --input-format bin \
+  --n-samples 1000 \
+  --n-features 20 \
+  --cvisel-models-dir models \
+  --generations 10 \
+  --population 20
+```
+
+Если есть `label.bin`, его можно передать для внешней оценки ARI:
+
+```bash
+python -m clustmetalearn.tpot_clustering path/to/data.bin \
+  --input-format bin \
+  --n-samples 1000 \
+  --n-features 20 \
+  --label-bin path/to/label.bin \
+  --metric ari
+```
+
+## Основные артефакты
+
+- `data/meta_features.csv` — единая таблица мета-признаков.
+- `models/cvisel.joblib` — модель выбора внутренней метрики качества.
+- `models/algrank.joblib` — модель выбора семейства алгоритма.
+- `models/ari_surrogate.pkl` — регрессор ожидаемого ARI.
+- `models/hp_intervals.json` — эмпирические интервалы гиперпараметров.
+- `reports/meta_evaluation.txt` — отчёт по мета-моделям.
+- `data/smbo_results.csv` — результаты подбора гиперпараметров.
+- `data/time_budget_results.csv` — проверка стратегий при ограничении времени.
+- `data/feature_importance_cvisel.csv` — важность мета-признаков.
+- `data/domain_testing_results.csv` — результаты доменных проверок.
+
+## Что такое data.bin и label.bin
+
+В бенчмарке `hj-n/labeled-datasets` каждый датасет хранится в виде двух файлов:
+
+- `data.bin` — матрица признаков в формате `float32`;
+- `label.bin` — метки объектов в формате `int32`.
+
+`label.bin` нужен только для оценки качества на размеченных бенчмарках. Для
+нового неизвестного датасета обычно достаточно `data.csv` или `data.bin` без
+меток.
+
 

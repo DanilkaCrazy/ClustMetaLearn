@@ -18,7 +18,7 @@ from clustmetalearn.meta.evaluate import (
 )
 from clustmetalearn.meta.labels import build_labels_for_datasets_root
 from clustmetalearn.meta.models import load_bundle
-from clustmetalearn.meta.recommend import recommend_from_table
+from clustmetalearn.meta.recommend import recommend_from_bin, recommend_from_table
 from clustmetalearn.meta.train import prepare_training_table, train_meta_models
 
 
@@ -152,12 +152,27 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
 
 
 def cmd_recommend(args: argparse.Namespace) -> None:
-    rec = recommend_from_table(
-        args.csv_path,
-        Path(args.models_dir),
-        label_column=args.label_column,
-        include_topology=not args.no_topo,
-    )
+    input_format = args.input_format
+    if input_format == "auto":
+        input_format = "bin" if str(args.input_path).endswith(".bin") else "csv"
+    if input_format == "bin":
+        if args.n_samples is None or args.n_features is None:
+            raise SystemExit("--n-samples and --n-features are required for .bin input.")
+        rec = recommend_from_bin(
+            args.input_path,
+            Path(args.models_dir),
+            n_samples=args.n_samples,
+            n_features=args.n_features,
+            dtype=args.dtype,
+            include_topology=not args.no_topo,
+        )
+    else:
+        rec = recommend_from_table(
+            args.input_path,
+            Path(args.models_dir),
+            label_column=args.label_column,
+            include_topology=not args.no_topo,
+        )
     out = {
         "predicted_cvi": rec.predicted_cvi,
         "predicted_cvi_metric": rec.predicted_cvi_metric,
@@ -194,10 +209,14 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("--report", default=None)
     e.set_defaults(func=cmd_evaluate)
 
-    r = sub.add_parser("recommend", help="Recommend CVI and algorithm for a CSV")
-    r.add_argument("csv_path")
+    r = sub.add_parser("recommend", help="Recommend CVI and algorithm for a dataset")
+    r.add_argument("input_path")
+    r.add_argument("--input-format", choices=["auto", "csv", "bin"], default="auto")
     r.add_argument("--models-dir", default="models")
     r.add_argument("-l", "--label-column", default=None)
+    r.add_argument("--n-samples", type=int, default=None)
+    r.add_argument("--n-features", type=int, default=None)
+    r.add_argument("--dtype", default="float32")
     r.add_argument("--no-topo", action="store_true")
     r.set_defaults(func=cmd_recommend)
 

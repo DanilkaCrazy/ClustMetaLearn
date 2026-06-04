@@ -9,7 +9,11 @@ import numpy as np
 import pandas as pd
 
 from clustmetalearn.meta.constants import CVI_CLASS_TO_METRIC
-from clustmetalearn.meta.features import extract_meta_features, extract_meta_features_from_csv
+from clustmetalearn.meta.features import (
+    extract_meta_features,
+    extract_meta_features_from_bin,
+    extract_meta_features_from_csv,
+)
 from clustmetalearn.meta.hp_intervals import load_hp_intervals
 from clustmetalearn.meta.models import (
     MetaModelBundle,
@@ -75,6 +79,30 @@ def recommend_from_table(
     feats = extract_meta_features_from_csv(
         csv_path,
         label_column=label_column,
+        include_topology=include_topology,
+    )
+    hp_path = Path(models_dir) / "hp_intervals.json"
+    hp = load_hp_intervals(hp_path) if hp_path.is_file() else None
+    return recommend_from_features(feats, bundle, hp_intervals=hp)
+
+
+def recommend_from_bin(
+    data_path: str,
+    models_dir: Path,
+    *,
+    n_samples: int,
+    n_features: int,
+    dtype: str = "float32",
+    include_topology: bool = True,
+) -> MetaRecommendation:
+    bundle = load_bundle(models_dir)
+    if include_topology != bundle.use_topo:
+        include_topology = bundle.use_topo
+    feats = extract_meta_features_from_bin(
+        data_path,
+        n_samples=n_samples,
+        n_features=n_features,
+        dtype=dtype,
         include_topology=include_topology,
     )
     hp_path = Path(models_dir) / "hp_intervals.json"

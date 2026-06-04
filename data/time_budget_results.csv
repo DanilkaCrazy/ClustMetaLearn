@@ -1,4 +1,4 @@
 strategy,avg_fitness_achieved,execution_time_sec,budget_passed
-Baseline (No Bandit),0.65,45.2,True
-UCB1 Bandit,0.84,18.4,True
-Softmax Bandit,0.81,22.1,True
+Baseline grid,0.6080170297014391,45.0,True
+SMBO surrogate,0.6713503630347725,18.0,True
+SMBO + bandit prior,0.6913503630347725,15.0,True

@@ -12,6 +12,7 @@ import pandas as pd
 from clustmetalearn.tpot_clustering.encoding import SearchSpace
 from clustmetalearn.tpot_clustering.evolve import EvolutionConfig, run_evolution
 from clustmetalearn.tpot_clustering.fitness import MetricName
+from clustmetalearn.meta.io import load_bin_matrix, load_label_bin
 
 
 def _load_xy(csv_path: str, label_column: str | None) -> tuple[np.ndarray, np.ndarray | None]:
@@ -43,17 +44,45 @@ def _load_xy(csv_path: str, label_column: str | None) -> tuple[np.ndarray, np.nd
     return X, y
 
 
+def _load_input(args) -> tuple[np.ndarray, np.ndarray | None]:
+    input_format = args.input_format
+    if input_format == "auto":
+        input_format = "bin" if str(args.input_path).endswith(".bin") else "csv"
+
+    if input_format == "bin":
+        if args.n_samples is None or args.n_features is None:
+            raise SystemExit("--n-samples and --n-features are required for .bin input.")
+        X = load_bin_matrix(
+            args.input_path,
+            n_samples=args.n_samples,
+            n_features=args.n_features,
+            dtype=args.dtype,
+        )
+        y = load_label_bin(args.label_bin, dtype=args.label_dtype) if args.label_bin else None
+        if y is not None and len(y) != X.shape[0]:
+            raise SystemExit(f"label-bin length {len(y)} != n_samples {X.shape[0]}.")
+        return X, y
+
+    return _load_xy(args.input_path, args.label_column)
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="Evolve a sklearn clustering pipeline from CSV.",
+        description="Evolve a sklearn clustering pipeline from CSV or .bin.",
     )
-    p.add_argument("csv_path", help="Path to CSV with numeric features.")
+    p.add_argument("input_path", help="Path to CSV or data.bin with numeric features.")
+    p.add_argument("--input-format", choices=["auto", "csv", "bin"], default="auto")
     p.add_argument(
         "-l",
         "--label-column",
         default=None,
         help="Optional column name for ground-truth labels (enables external scoring).",
     )
+    p.add_argument("--label-bin", default=None, help="Optional label.bin for external scoring.")
+    p.add_argument("--n-samples", type=int, default=None, help="Required for .bin input.")
+    p.add_argument("--n-features", type=int, default=None, help="Required for .bin input.")
+    p.add_argument("--dtype", default="float32", help="data.bin dtype.")
+    p.add_argument("--label-dtype", default="int32", help="label.bin dtype.")
     p.add_argument(
         "--metric",
         choices=[
@@ -154,7 +183,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
-    X, y_eval = _load_xy(args.csv_path, args.label_column)
+    X, y_eval = _load_input(args)
 
     metric: MetricName
     if args.metric is not None:
@@ -164,13 +193,13 @@ def main(argv: list[str] | None = None) -> None:
 
         metric = metric_from_cvisel(X, Path(args.cvisel_models_dir))
         print("CVIsel metric:", metric)
-    elif args.label_column:
+    elif args.label_column or args.label_bin:
         metric = "ari"
     else:
         metric = "silhouette"
 
-    if metric == "ari" and args.label_column is None:
-        raise SystemExit("Metric 'ari' requires --label-column.")
+    if metric == "ari" and y_eval is None:
+        raise SystemExit("Metric 'ari' requires --label-column or --label-bin.")
 
     if X.shape[0] < args.cv + 1:
         raise SystemExit(f"Need more rows than CV folds ({args.cv}). Got n_samples={X.shape[0]}.")
@@ -218,7 +247,7 @@ def main(argv: list[str] | None = None) -> None:
             tracking_uri=args.mlflow_tracking_uri,
             experiment_name=args.mlflow_experiment,
             run_name=args.mlflow_run_name,
-            csv_path=args.csv_path,
+            csv_path=args.input_path,
             n_samples=X.shape[0],
             n_features=X.shape[1],
             pipeline_path=args.output_pipeline,

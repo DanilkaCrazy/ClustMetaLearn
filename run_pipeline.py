@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
-# run_pipeline.py (Класть строго в КОРЕНЬ проекта!)
 import sys
+import os
 import subprocess
 import time
 from pathlib import Path
 
 STEPS = [
     ("01_benchmark_clm.py", "Сбор бенчмарков и CLM-фильтрация"),
-    ("02_isa_adjusted_ivms.py", "Adjusted IVMs и генерация ISA таргетов"),
-    ("03_surrogate_models.py", "Обучение суррогатных моделей производительности"),
+    ("02_isa_adjusted_ivms.py", "Нормализация мета-признаков и ISA-таргетов"),
+    ("03_meta_models.py", "Обучение CVIsel / AlgRank"),
+    ("03_surrogate_models.py", "Обучение ARI-surrogate"),
     ("04_smac_tuning.py", "Настройка SMBO/SMAC для гиперпараметров"),
     ("05_time_budget_validation.py", "Валидация стратегий Time Budget"),
-    ("06_shap_analysis.py", "XAI-анализ: SHAP-интерпретация выбора моделей"),
+    ("06_shap_analysis.py", "Интерпретация важности признаков"),
     ("07_domain_testing.py", "Тестирование на прикладных доменах (Bio/Text)"),
 ]
 
 def main():
-    # Намертво привязываемся к корню, где лежит сам run_pipeline.py
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(line_buffering=True)
     root_dir = Path(__file__).resolve().parent
     scripts_dir = root_dir / "scripts"
     
@@ -25,6 +27,9 @@ def main():
     print("=" * 80)
     
     global_start = time.time()
+    env = os.environ.copy()
+    src_path = str(root_dir / "src")
+    env["PYTHONPATH"] = src_path + os.pathsep + env.get("PYTHONPATH", "")
     
     for filename, description in STEPS:
         script_path = scripts_dir / filename
@@ -36,8 +41,7 @@ def main():
         print(f"\n{description} ({filename})")
         start_time = time.time()
         
-        # Запускаем скрипты с установкой рабочей директории (cwd) в корень проекта
-        result = subprocess.run([sys.executable, str(script_path)], cwd=str(root_dir))
+        result = subprocess.run([sys.executable, str(script_path)], cwd=str(root_dir), env=env)
         
         if result.returncode != 0:
             print(f"Скрипт {filename} завершился некорректно. Остановка конвейера.")

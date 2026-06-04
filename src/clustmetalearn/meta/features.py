@@ -9,6 +9,7 @@ from sklearn.feature_selection import mutual_info_regression
 from sklearn.preprocessing import StandardScaler
 
 from clustmetalearn.meta.constants import META_FEATURE_COLS
+from clustmetalearn.meta.io import load_bin_matrix
 
 
 def _preprocess_X(X: np.ndarray) -> np.ndarray:
@@ -136,3 +137,20 @@ def extract_meta_features_from_csv(
     if len(num_cols) == 0:
         raise ValueError("No numeric columns in CSV.")
     return extract_meta_features(df[num_cols].to_numpy(), include_topology=include_topology)
+
+
+def extract_meta_features_from_bin(
+    data_path: str,
+    *,
+    n_samples: int,
+    n_features: int,
+    dtype: str = "float32",
+    include_topology: bool = True,
+) -> dict[str, float]:
+    X = load_bin_matrix(
+        data_path,
+        n_samples=n_samples,
+        n_features=n_features,
+        dtype=dtype,
+    )
+    return extract_meta_features(X, include_topology=include_topology)

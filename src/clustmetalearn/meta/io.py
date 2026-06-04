@@ -62,6 +62,33 @@ def load_labeled_dataset(
     return X.astype(np.float64), labels
 
 
+def load_bin_matrix(
+    data_path: Path,
+    *,
+    n_samples: int,
+    n_features: int,
+    dtype: str = "float32",
+) -> np.ndarray:
+    data_path = Path(data_path)
+    if not data_path.is_file():
+        raise FileNotFoundError(f"Missing binary data file: {data_path}")
+    data = np.fromfile(data_path, dtype=np.dtype(dtype))
+    expected = int(n_samples) * int(n_features)
+    if len(data) != expected:
+        raise ValueError(
+            f"Shape mismatch for {data_path}: expected {expected} values "
+            f"({n_samples}x{n_features}), got {len(data)}"
+        )
+    return data.reshape(int(n_samples), int(n_features)).astype(np.float64)
+
+
+def load_label_bin(label_path: Path, *, dtype: str = "int32") -> np.ndarray:
+    label_path = Path(label_path)
+    if not label_path.is_file():
+        raise FileNotFoundError(f"Missing binary label file: {label_path}")
+    return np.fromfile(label_path, dtype=np.dtype(dtype))
+
+
 def load_dataset_summary(summary_path: Path) -> pd.DataFrame:
     return pd.read_csv(summary_path)
 

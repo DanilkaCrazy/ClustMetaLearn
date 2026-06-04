@@ -5,6 +5,7 @@ data/labeled-datasets/
 
 # Игнорируем сохраненные веса моделей и кэш
 models/*.pkl
+mlruns/
 __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
