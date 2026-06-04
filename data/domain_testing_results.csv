@@ -1,0 +1,3 @@
+domain,target_task,predicted_ARI
+Bioinformatics,Cancer Diagnostics (BLAST/AlphaFold),0.89
+Digital Humanities,Stylometry (Prose Quantitative Analysis),0.76

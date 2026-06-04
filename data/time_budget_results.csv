@@ -1,0 +1,4 @@
+strategy,avg_fitness_achieved,execution_time_sec,budget_passed
+Baseline (No Bandit),0.65,45.2,True
+UCB1 Bandit,0.84,18.4,True
+Softmax Bandit,0.81,22.1,True
