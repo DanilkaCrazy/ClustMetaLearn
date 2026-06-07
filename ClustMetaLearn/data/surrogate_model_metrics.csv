@@ -1,0 +1,2 @@
+model,r2,mae,n_train,n_val
+ari_surrogate,-0.24957814615419038,0.18378105320309615,32,33

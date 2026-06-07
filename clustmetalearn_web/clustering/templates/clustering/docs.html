@@ -1,0 +1,161 @@
+{% extends "clustering/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Documentation" %} — ClustMetaLearn{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-10">
+
+    <header>
+        <h1 class="text-title-lg font-bold mb-2">{% trans "Documentation" %}</h1>
+        <p class="text-on-surface-variant">{% trans "Complete guide to the ClustMetaLearn platform." %}</p>
+    </header>
+
+    <!-- Source code -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+        <h2 class="text-title-md font-semibold mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">code</span> {% trans "Source Code" %}
+        </h2>
+        <p class="text-on-surface-variant mb-3">{% trans "Full source code, models, and research pipeline:" %}</p>
+        <a href="{{ GITHUB_REPO_URL }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">{{ GITHUB_REPO_URL }}</a>
+    </section>
+
+    <!-- Getting started -->
+    <section>
+        <h2 class="text-title-md font-semibold mb-3">{% trans "Getting Started" %}</h2>
+        <pre class="bg-surface-container-low p-4 rounded-lg text-sm overflow-x-auto">cd clustmetalearn_web
+python manage.py migrate
+python manage.py runserver</pre>
+        <p class="text-on-surface-variant mt-2 text-sm">{% trans "Docker:" %} <code>docker-compose up --build</code></p>
+    </section>
+
+    <!-- Pipeline -->
+    <section>
+        <h2 class="text-title-md font-semibold mb-3">{% trans "How the ClustMetaLearn Pipeline Works" %}</h2>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-2 text-center text-xs font-semibold">
+                <div class="bg-primary text-on-primary p-3 rounded-lg">{% trans "Upload" %}</div>
+                <div class="bg-primary-container text-on-primary-container p-3 rounded-lg">{% trans "Meta-features" %}</div>
+                <div class="bg-secondary text-on-secondary p-3 rounded-lg">CVIsel + AlgRank</div>
+                <div class="bg-secondary-container text-on-secondary-container p-3 rounded-lg">{% trans "ARI Surrogate" %}</div>
+                <div class="bg-surface-container-high p-3 rounded-lg">{% trans "Recommendations" %}</div>
+            </div>
+            <ol class="list-decimal list-inside space-y-2 text-on-surface-variant text-sm">
+                <li><strong>{% trans "Meta-feature extraction" %}</strong> — {% trans "20 statistical, PCA, entropy, mutual information, and topological descriptors computed from raw data." %}</li>
+                <li><strong>{% trans "Normalization" %}</strong> — {% trans "Features are aligned with training schema via feature_cols.txt." %}</li>
+                <li><strong>CVIsel</strong> — {% trans "Random Forest classifier selects Calinski-Harabasz, Davies-Bouldin, or Silhouette." %}</li>
+                <li><strong>AlgRank</strong> — {% trans "Ranks k-means, MiniBatch K-Means, Agglomerative, GMM." %}</li>
+                <li><strong>ari_surrogate</strong> — {% trans "Regressor estimates expected Adjusted Rand Index." %}</li>
+                <li><strong>{% trans "Post-processing" %}</strong> — {% trans "hp_intervals.json provides k_min, k_max, k_median, scaler_rate per algorithm." %}</li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- Usage examples -->
+    <section>
+        <h2 class="text-title-md font-semibold mb-3">{% trans "Usage Examples" %}</h2>
+        <div class="space-y-4 text-sm text-on-surface-variant">
+            <div class="bg-surface-container-low p-4 rounded-lg">
+                <h3 class="font-semibold text-on-surface mb-1">1. {% trans "Upload a dataset" %}</h3>
+                <p>{% trans "Go to Upload, select a CSV with numeric columns or a .bin file with n_samples and n_features." %}</p>
+            </div>
+            <div class="bg-surface-container-low p-4 rounded-lg">
+                <h3 class="font-semibold text-on-surface mb-1">2. {% trans "Interpret results" %}</h3>
+                <p>{% trans "The Recommendation page shows metric, algorithm, top-3, predicted ARI, and hyperparameter intervals. Use Analysis for interactive Plotly charts." %}</p>
+            </div>
+            <div class="bg-surface-container-low p-4 rounded-lg">
+                <h3 class="font-semibold text-on-surface mb-1">3. {% trans "Start evolution" %}</h3>
+                <p>{% trans "On the Evolution page, set generations and population size, then click Start Evolution. Progress is tracked via AJAX polling." %}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular science articles -->
+    <section>
+        <h2 class="text-title-md font-semibold mb-4">{% trans "Popular Science Articles" %}</h2>
+
+        <article class="mb-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">psychology</span>
+                {% trans "What is meta-learning and why does it accelerate Data Science?" %}
+            </h3>
+            <p class="text-on-surface-variant leading-relaxed mb-3">
+                {% trans "Meta-learning (learning to learn) builds models that predict which algorithm will work best on a new dataset based on its characteristics, without running expensive grid searches. ClustMetaLearn applies this to clustering: instead of trying dozens of algorithms and metrics, you upload data once and receive a data-driven recommendation in seconds." %}
+            </p>
+            <p class="text-xs text-on-surface-variant">
+                {% trans "Reference:" %} <a href="https://arxiv.org/abs/2007.04109" target="_blank" rel="noopener" class="text-primary hover:underline">AutoML-Zero (Real et al., 2020)</a>,
+                <a href="https://www.ml.cmu.edu/research/algorithms-and-theory/meta-learning.html" target="_blank" rel="noopener" class="text-primary hover:underline">CMU Meta-Learning</a>
+            </p>
+        </article>
+
+        <article class="mb-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">hub</span>
+                {% trans "Topological meta-features: how data shape helps select clustering algorithms" %}
+            </h3>
+            <p class="text-on-surface-variant leading-relaxed mb-3">
+                {% trans "Persistent homology captures the shape of data: Betti numbers count connected components and loops, while persistent entropy measures structural complexity. Datasets with many holes favor density-based methods; compact blobs favor centroid-based k-means. ClustMetaLearn computes these features via Ripser and feeds them to AlgRank." %}
+            </p>
+            <p class="text-xs text-on-surface-variant">
+                {% trans "Reference:" %} <a href="https://arxiv.org/abs/1909.13462" target="_blank" rel="noopener" class="text-primary hover:underline">Ripser (Bauer, 2021)</a>,
+                <a href="https://arxiv.org/abs/1706.07513" target="_blank" rel="noopener" class="text-primary hover:underline">TDA for Machine Learning (Hofer et al.)</a>
+            </p>
+        </article>
+
+        <article class="mb-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-tertiary">history_toggle_off</span>
+                {% trans "Evolutionary pipeline search: genetic algorithms instead of Grid Search" %}
+            </h3>
+            <p class="text-on-surface-variant leading-relaxed mb-3">
+                {% trans "Grid Search exhaustively tries hyperparameter combinations — feasible for small spaces but impractical for clustering pipelines with scaling, algorithm choice, and k selection. Evolutionary search (inspired by TPOT) mutates and crosses pipeline genomes, keeping the fittest. Multi-armed bandits allocate evaluation budget to promising branches. ClustMetaLearn integrates this via clustmetalearn.tpot_clustering." %}
+            </p>
+            <p class="text-xs text-on-surface-variant">
+                {% trans "Reference:" %} <a href="https://arxiv.org/abs/1608.08828" target="_blank" rel="noopener" class="text-primary hover:underline">TPOT (Olson et al., 2016)</a>,
+                <a href="https://en.wikipedia.org/wiki/Multi-armed_bandit" target="_blank" rel="noopener" class="text-primary hover:underline">Multi-armed Bandit</a>
+            </p>
+        </article>
+    </section>
+
+    <!-- Kaggle & Hugging Face integration -->
+    <section>
+        <h2 class="text-title-md font-semibold mb-3">{% trans "Kaggle & Hugging Face Integration" %}</h2>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-4 text-sm text-on-surface-variant">
+            <div>
+                <h3 class="font-semibold text-on-surface mb-2">{% trans "Import from Kaggle" %}</h3>
+                <p>{% trans "On the Upload page, open the Kaggle tab. Enter a dataset slug or full URL:" %}</p>
+                <ul class="list-disc list-inside mt-2 space-y-1 font-mono text-xs">
+                    <li>uciml/iris</li>
+                    <li>https://www.kaggle.com/datasets/uciml/iris</li>
+                </ul>
+                <p class="mt-2">{% trans "Set credentials before importing:" %}</p>
+                <pre class="bg-surface-container-low p-3 rounded-lg mt-1 text-xs overflow-x-auto">export KAGGLE_USERNAME=your_username
+export KAGGLE_KEY=your_api_key</pre>
+            </div>
+            <div>
+                <h3 class="font-semibold text-on-surface mb-2">{% trans "Import from Hugging Face" %}</h3>
+                <p>{% trans "Open the Hugging Face tab and enter a dataset id or URL:" %}</p>
+                <ul class="list-disc list-inside mt-2 space-y-1 font-mono text-xs">
+                    <li>scikit-learn/iris</li>
+                    <li>https://huggingface.co/datasets/scikit-learn/iris</li>
+                </ul>
+                <p class="mt-2">{% trans "Large datasets are streamed in chunks (up to 100,000 rows) to avoid memory issues. Downloads use isolated temporary directories." %}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- API -->
+    <section>
+        <h2 class="text-title-md font-semibold mb-3">{% trans "API for Developers" %}</h2>
+        <div class="bg-surface-container-low p-4 rounded-lg text-sm font-mono space-y-2">
+            <p>GET /api/task/&lt;uuid&gt;/meta/ — {% trans "Task meta-features and recommendations (JSON)" %}</p>
+            <p>GET /api/evolve/&lt;uuid&gt;/status/ — {% trans "Evolution session progress (JSON)" %}</p>
+            <p>GET /export/&lt;uuid&gt;/txt/ — {% trans "Export single experiment (TXT)" %}</p>
+            <p>GET /export/&lt;uuid&gt;/pdf/ — {% trans "Export single experiment (PDF)" %}</p>
+            <p>GET /export/all/txt/?scope=all — {% trans "Export all experiments (TXT)" %}</p>
+            <p>POST /set-language/ — language=en|ru</p>
+            <p>POST /set-theme/ — theme=light|dark</p>
+        </div>
+        <p class="text-xs text-on-surface-variant mt-2">{% trans "Full REST API is planned for a future release." %}</p>
+    </section>
+
+</div>
+{% endblock %}

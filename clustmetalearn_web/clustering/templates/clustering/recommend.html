@@ -1,0 +1,111 @@
+{% extends "clustering/base.html" %}
+{% load static i18n %}
+{% block title %}{% trans "Recommendations" %} — ClustMetaLearn{% endblock %}
+{% block content %}
+<div id="recommend-root" data-task-id="{{ task.id }}" class="max-w-5xl mx-auto space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="text-title-lg font-bold">{% trans "Algorithm Recommendation" %}</h1>
+            <p class="text-on-surface-variant">{{ task.file_name }}</p>
+        </div>
+        <span class="px-3 py-1 rounded-full text-sm font-medium
+            {% if task.status == 'success' %}bg-secondary-container text-on-secondary-container
+            {% elif task.status == 'failed' %}bg-error-container text-on-error-container
+            {% else %}bg-surface-container{% endif %}">
+            {{ task.get_status_display }}
+        </span>
+    </div>
+
+    {% if task.status == 'processing' %}
+    <div class="bg-surface-container-low p-6 rounded-xl text-center">
+        <div class="skeleton h-8 w-48 mx-auto mb-4"></div>
+        <p class="text-on-surface-variant">{% trans "Analysis in progress..." %}</p>
+        <script>setTimeout(function(){ location.reload(); }, 3000);</script>
+    </div>
+    {% elif task.status == 'failed' %}
+    <div class="bg-error-container text-on-error-container p-4 rounded-lg">
+        <span class="material-symbols-outlined align-middle">error</span> {{ task.error_message }}
+    </div>
+    {% elif task.status == 'success' %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+            <p class="text-xs font-bold uppercase text-on-surface-variant mb-2">{% trans "Recommended Metric" %}</p>
+            <p class="text-2xl font-bold text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined">rule</span> {{ task.recommended_metric|default:"N/A" }}
+            </p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+            <p class="text-xs font-bold uppercase text-on-surface-variant mb-2">{% trans "Recommended Algorithm" %}</p>
+            <p class="text-2xl font-bold text-secondary flex items-center gap-2">
+                <span class="material-symbols-outlined">schema</span> {{ algo_display }}
+            </p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+            <p class="text-xs font-bold uppercase text-on-surface-variant mb-2">{% trans "Predicted ARI" %}</p>
+            <p class="text-2xl font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined">insights</span> {% if task.ari_prediction %}{{ task.ari_prediction|floatformat:3 }}{% else %}N/A{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+        <h3 class="text-title-md font-semibold mb-4">{% trans "Top-3 Algorithms" %}</h3>
+        <div class="flex flex-wrap gap-3">
+            {% for algo in top3_display %}
+            <span class="px-4 py-2 bg-surface-container rounded-full text-sm font-medium">{{ forloop.counter }}. {{ algo }}</span>
+            {% empty %}
+            <span class="text-on-surface-variant">{% trans "No predictions available" %}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-title-md font-semibold">{% trans "Hyperparameter Intervals" %}</h3>
+            <button type="button" class="text-sm text-primary flex items-center gap-1 hover:underline"
+                data-copy='{{ hp_json|escapejs }}'
+                data-copy-msg="{% trans 'Hyperparameters copied!' %}">
+                <span class="material-symbols-outlined text-sm">content_copy</span> {% trans "Copy" %}
+            </button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div class="bg-surface-container-low p-3 rounded-lg"><p class="text-on-surface-variant text-xs uppercase">k_min</p><p class="font-mono font-semibold">{{ hp_display.k_min }}</p></div>
+            <div class="bg-surface-container-low p-3 rounded-lg"><p class="text-on-surface-variant text-xs uppercase">k_max</p><p class="font-mono font-semibold">{{ hp_display.k_max }}</p></div>
+            <div class="bg-surface-container-low p-3 rounded-lg"><p class="text-on-surface-variant text-xs uppercase">k_median</p><p class="font-mono font-semibold">{{ hp_display.k_median }}</p></div>
+            <div class="bg-surface-container-low p-3 rounded-lg"><p class="text-on-surface-variant text-xs uppercase">scaler_rate</p><p class="font-mono font-semibold">{{ hp_display.scaler_rate }}</p></div>
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 card-hover">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-title-md font-semibold">{% trans "Meta-features" %}</h3>
+            <button id="refresh-meta" type="button" class="text-sm bg-surface-container px-3 py-1 rounded-lg hover:bg-surface-container-high"
+                data-success-msg="{% trans 'Meta-features updated' %}">
+                <span class="material-symbols-outlined text-sm align-middle">refresh</span> {% trans "Refresh" %}
+            </button>
+        </div>
+        <div class="overflow-x-auto max-h-64">
+            <table class="w-full text-sm">
+                <thead><tr><th class="p-2 text-left text-on-surface-variant">{% trans "Feature" %}</th><th class="p-2 text-left">{% trans "Value" %}</th></tr></thead>
+                <tbody id="meta-table-body">
+                    {% for key, value in meta_features.items %}
+                    <tr><td class="p-2 font-mono">{{ key }}</td><td class="p-2 font-mono">{{ value|floatformat:4 }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+        {% include "clustering/includes/export_buttons.html" with task=task %}
+        <a href="{% url 'clustering:analyze' task.id %}" class="bg-surface-container text-on-surface px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container-high btn-primary">
+            {% trans "View Analysis" %}
+        </a>
+        <a href="{% url 'clustering:evolve' task.id %}" class="bg-primary text-on-primary px-4 py-2 rounded-lg btn-primary">
+            {% trans "Run Evolution" %}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'clustering/js/recommend.js' %}"></script>{% endblock %}

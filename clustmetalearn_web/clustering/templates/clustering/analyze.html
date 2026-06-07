@@ -1,0 +1,73 @@
+{% extends "clustering/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Dataset Analysis" %} — ClustMetaLearn{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex flex-wrap justify-between items-start gap-4">
+        <div>
+            <h1 class="text-title-lg font-bold">{% trans "Dataset Analysis" %}</h1>
+            <p class="text-on-surface-variant">{{ task.file_name }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            {% include "clustering/includes/export_buttons.html" with task=task %}
+            <a href="{% url 'clustering:recommend' task.id %}" class="text-primary hover:underline text-sm">← {% trans "Back to recommendations" %}</a>
+        </div>
+    </div>
+
+    {% if not meta_features %}
+    <div class="bg-error-container text-on-error-container p-4 rounded-xl">{% trans "No meta-features available for this task." %}</div>
+    {% else %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 text-on-surface">{% trans "Meta-features Histogram" %}</h3>
+            <div id="chart-histogram" class="chart-container"><div class="skeleton h-80"></div></div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 text-on-surface">{% trans "Top-3 Algorithm Probabilities" %}</h3>
+            <div id="chart-top3" class="chart-container"><div class="skeleton h-80"></div></div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 text-on-surface">{% trans "PCA Variance Space" %}</h3>
+            <div id="chart-pca" class="chart-container"><div class="skeleton h-80"></div></div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 text-on-surface">{% trans "Meta-features Correlation" %}</h3>
+            <div id="chart-correlation" class="chart-container"><div class="skeleton h-80"></div></div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 text-on-surface">{% trans "Predicted ARI Across Tasks" %}</h3>
+            <div id="chart-ari_scatter" class="chart-container"><div class="skeleton h-80"></div></div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 text-on-surface">{% trans "Evolution Quality" %}</h3>
+            <div id="chart-evolution" class="chart-container"><div class="skeleton h-80"></div></div>
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden card-hover">
+        <div class="p-4 border-b border-outline-variant">
+            <h3 class="text-title-md font-semibold text-on-surface">{% trans "Extracted Meta-features" %}</h3>
+        </div>
+        <div class="overflow-x-auto max-h-96">
+            <table class="w-full text-sm">
+                <thead class="bg-surface-container-low sticky top-0">
+                    <tr>
+                        <th class="p-3 text-left text-on-surface-variant">{% trans "Feature" %}</th>
+                        <th class="p-3 text-left text-on-surface-variant">{% trans "Value" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant">
+                    {% for key, value in meta_features.items %}
+                    <tr class="hover:bg-surface-container-low/50">
+                        <td class="p-3 font-mono text-on-surface-variant">{{ key }}</td>
+                        <td class="p-3 font-mono text-on-surface">{{ value|floatformat:4 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{{ charts_data|json_script:"charts-data" }}
+{% endblock %}

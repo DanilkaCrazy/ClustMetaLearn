@@ -1,0 +1,149 @@
+# ClustMetaLearn
+
+ClustMetaLearn подбирает стратегию кластеризации для табличных данных. На вход
+подаётся новый датасет, а система:
+
+1. считает мета-признаки датасета;
+2. рекомендует внутреннюю метрику качества кластеризации;
+3. рекомендует семейство алгоритма кластеризации;
+4. сужает диапазон гиперпараметров;
+5. при необходимости запускает эволюционный подбор полного пайплайна.
+
+Проект поддерживает два формата входных данных:
+
+- `CSV` — удобный формат для обычной работы;
+- `.bin` — бинарная матрица признаков `float32`, совместимая с бенчмарком
+  `hj-n/labeled-datasets`.
+
+`.bin` не обязателен для нового датасета. Он нужен, если данные уже лежат в
+таком формате или если нужно воспроизвести бенчмарк из `labeled-datasets`.
+Для `.bin` обязательно указывать форму матрицы: `n_samples` и `n_features`,
+потому что сам файл её не хранит.
+
+## Установка
+
+```bash
+pip install -e ".[dev]"
+```
+
+Для топологических признаков:
+
+```bash
+pip install -e ".[topo]"
+```
+
+## Полный исследовательский пайплайн
+
+```bash
+python run_pipeline.py
+```
+
+Этот запуск последовательно выполняет:
+
+1. подготовку сводки датасетов и CLM-разбиения;
+2. нормализацию таблиц с мета-признаками;
+3. обучение CVIsel и AlgRank;
+4. обучение суррогатной модели ARI;
+5. подбор гиперпараметров;
+6. проверку стратегий при ограничении по времени;
+7. интерпретацию важности признаков;
+8. проверку на доменных примерах Bio/Text.
+
+```mermaid
+flowchart TB
+    inputData["CSV or data.bin"] --> features["Meta-features"]
+    features --> cvisel["CVIsel"]
+    features --> algRank["AlgRank"]
+    features --> surrogate["ARI surrogate"]
+    cvisel --> search["SMBO or evolutionary search"]
+    algRank --> search
+    surrogate --> search
+    search --> report["Reports and artifacts"]
+```
+
+## Рекомендация для нового датасета
+
+### CSV
+
+```bash
+clust-meta recommend path/to/data.csv --models-dir models
+```
+
+Если в CSV есть колонка с метками и её нужно исключить из признаков:
+
+```bash
+clust-meta recommend path/to/data.csv --models-dir models --label-column label
+```
+
+### data.bin
+
+```bash
+clust-meta recommend path/to/data.bin \
+  --input-format bin \
+  --n-samples 1000 \
+  --n-features 20 \
+  --models-dir models
+```
+
+Файл `data.bin` читается как плоский массив `float32` и преобразуется в матрицу
+`n_samples x n_features`.
+
+## Эволюционный подбор пайплайна
+
+### CSV
+
+```bash
+python -m clustmetalearn.tpot_clustering path/to/data.csv \
+  --cvisel-models-dir models \
+  --generations 10 \
+  --population 20
+```
+
+### data.bin
+
+```bash
+python -m clustmetalearn.tpot_clustering path/to/data.bin \
+  --input-format bin \
+  --n-samples 1000 \
+  --n-features 20 \
+  --cvisel-models-dir models \
+  --generations 10 \
+  --population 20
+```
+
+Если есть `label.bin`, его можно передать для внешней оценки ARI:
+
+```bash
+python -m clustmetalearn.tpot_clustering path/to/data.bin \
+  --input-format bin \
+  --n-samples 1000 \
+  --n-features 20 \
+  --label-bin path/to/label.bin \
+  --metric ari
+```
+
+## Основные артефакты
+
+- `data/meta_features.csv` — единая таблица мета-признаков.
+- `models/cvisel.joblib` — модель выбора внутренней метрики качества.
+- `models/algrank.joblib` — модель выбора семейства алгоритма.
+- `models/ari_surrogate.pkl` — регрессор ожидаемого ARI.
+- `models/hp_intervals.json` — эмпирические интервалы гиперпараметров.
+- `reports/meta_evaluation.txt` — отчёт по мета-моделям.
+- `data/smbo_results.csv` — результаты подбора гиперпараметров.
+- `data/time_budget_results.csv` — проверка стратегий при ограничении времени.
+- `data/feature_importance_cvisel.csv` — важность мета-признаков.
+- `data/domain_testing_results.csv` — результаты доменных проверок.
+
+## Что такое data.bin и label.bin
+
+В бенчмарке `hj-n/labeled-datasets` каждый датасет хранится в виде двух файлов:
+
+- `data.bin` — матрица признаков в формате `float32`;
+- `label.bin` — метки объектов в формате `int32`.
+
+`label.bin` нужен только для оценки качества на размеченных бенчмарках. Для
+нового неизвестного датасета обычно достаточно `data.csv` или `data.bin` без
+меток.
+
+

@@ -1,0 +1,18 @@
+{% extends "clustering/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Privacy Policy" %} — ClustMetaLearn{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-title-lg font-bold mb-4">{% trans "Privacy Policy" %}</h1>
+    <p class="text-on-surface-variant mb-4">{% trans "Last updated: June 2026" %}</p>
+    <p class="text-on-surface-variant mb-4">
+        {% trans "ClustMetaLearn stores user account information (username, profile settings) and uploaded datasets for analysis. Dataset files are stored locally on the server and are associated with your account." %}
+    </p>
+    <p class="text-on-surface-variant mb-4">
+        {% trans "We do not share your data with third parties. You may request deletion of your account and associated data by contacting the administrator." %}
+    </p>
+    <p class="text-on-surface-variant">
+        {% trans "Theme and language preferences are stored in your user profile. For unauthenticated visitors, theme preference is stored in browser localStorage only." %}
+    </p>
+</div>
+{% endblock %}

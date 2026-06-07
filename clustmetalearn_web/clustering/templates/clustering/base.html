@@ -1,0 +1,46 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ user_language|default:'en' }}" class="{{ user_theme|default:'light' }}" data-theme="{{ user_theme|default:'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ClustMetaLearn{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'clustering/css/app.css' %}">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {{ DESIGN_COLORS_JSON|safe }},
+                    borderRadius: { DEFAULT: '0.25rem', lg: '0.5rem', xl: '0.75rem', full: '9999px' },
+                    spacing: { 'margin-mobile': '16px', 'margin-desktop': '48px', xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px' },
+                    fontFamily: { 'title-lg': ['Inter'], 'title-md': ['Inter'], 'body-md': ['Inter'] },
+                }
+            }
+        }
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col"{% if user.is_authenticated %} data-auth="1"{% endif %}>
+    {% if messages %}
+    <script>document.addEventListener('DOMContentLoaded',function(){ {% for message in messages %}CMLToast.show("{{ message|escapejs }}","{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}");{% endfor %} });</script>
+    {% endif %}
+    {% include "clustering/includes/navbar.html" %}
+    <div class="flex flex-1 pt-16">
+        {% if not hide_sidebar %}{% include "clustering/includes/sidebar.html" %}{% endif %}
+        <main class="flex-1 {% if not hide_sidebar %}md:ml-64{% endif %} p-margin-mobile md:p-margin-desktop bg-surface-bright page-enter">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% include "clustering/includes/footer.html" %}
+    <script src="{% static 'clustering/js/toast.js' %}"></script>
+    <script src="{% static 'clustering/js/theme.js' %}"></script>
+    <script src="{% static 'clustering/js/i18n.js' %}"></script>
+    <script src="{% static 'clustering/js/charts.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
