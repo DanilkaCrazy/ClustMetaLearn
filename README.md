@@ -26,7 +26,7 @@
 
 ## 🏗️ Архитектура
 
-mermaid ```
+```mermaid
 flowchart TD
     User[("Пользователь\n(CSV / .bin / Kaggle / HF)")] --> Upload["Загрузка датасета"]
     Upload --> Extract["Извлечение мета-признаков"]
@@ -54,8 +54,6 @@ flowchart TD
     Result --> Visual["Интерактивные графики\n(PCA, Heatmap, Histograms)"]
     Result --> Export["Экспорт TXT/PDF"]
 ```
-
-
 
 Платформа построена как **модульный пайплайн**:
 - **Извлечение мета-признаков** — из CSV или бинарного .bin.
