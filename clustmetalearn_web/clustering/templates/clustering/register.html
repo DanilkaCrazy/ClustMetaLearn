@@ -1,0 +1,36 @@
+{% extends "clustering/base_uncentered.html" %}
+{% load i18n %}
+{% block title %}{% trans "Register" %} — ClustMetaLearn{% endblock %}
+{% block content %}
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm">
+    <h2 class="text-title-md font-bold text-center mb-6">{% trans "Create account" %}</h2>
+    <form method="post" id="register-form">
+        {% csrf_token %}
+        <input type="hidden" name="sync_theme" id="sync-theme" value="">
+        <input type="hidden" name="sync_language" id="sync-language" value="">
+        {% for field in form %}
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-on-surface-variant mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="text-xs text-on-surface-variant mt-1">{{ field.help_text }}</p>{% endif %}
+            {% if field.errors %}<p class="text-error text-xs mt-1">{{ field.errors.0 }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="w-full bg-primary text-on-primary py-2 rounded-lg font-semibold hover:bg-primary-container mt-2">
+            {% trans "Register" %}
+        </button>
+    </form>
+    <p class="text-center text-sm text-on-surface-variant mt-4">
+        {% trans "Already have an account?" %}
+        <a href="{% url 'clustering:login' %}" class="text-primary hover:underline">{% trans "Login" %}</a>
+    </p>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.getElementById('register-form').addEventListener('submit', function() {
+        document.getElementById('sync-theme').value = localStorage.getItem('cml_theme') || 'light';
+        document.getElementById('sync-language').value = localStorage.getItem('cml_language') || 'en';
+    });
+</script>
+{% endblock %}

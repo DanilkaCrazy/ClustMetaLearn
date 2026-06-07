@@ -1,0 +1,55 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ user_language|default:'en' }}" class="{{ user_theme|default:'light' }}" data-theme="{{ user_theme|default:'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ClustMetaLearn{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: {{ DESIGN_COLORS_JSON|safe }} } }
+        }
+    </script>
+    <style>
+        .dark body { background-color: #121c2a; color: #eaf1ff; }
+        .dark .bg-surface-container-lowest { background-color: #27313f; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-background text-on-background min-h-screen flex items-center justify-center p-4">
+    {% if messages %}
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+        {% for message in messages %}
+        <div class="px-4 py-2 rounded-lg shadow text-sm bg-primary text-on-primary">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <a href="{% url 'clustering:index' %}" class="inline-flex items-center gap-2 text-title-lg font-bold text-primary">
+                <span class="material-symbols-outlined">hub</span> ClustMetaLearn
+            </a>
+        </div>
+        {% block content %}{% endblock %}
+        <div class="mt-6 flex justify-center gap-4 text-sm text-on-surface-variant">
+            <form method="post" action="{% url 'clustering:set_language' %}" class="inline">{% csrf_token %}
+                <select name="language" onchange="this.form.submit()" class="text-sm border rounded p-1">
+                    <option value="en" {% if user_language == 'en' %}selected{% endif %}>EN</option>
+                    <option value="ru" {% if user_language == 'ru' %}selected{% endif %}>RU</option>
+                </select>
+            </form>
+            <form method="post" action="{% url 'clustering:set_theme' %}" class="inline">{% csrf_token %}
+                <button type="submit" name="theme" value="light" class="material-symbols-outlined text-sm">light_mode</button>
+                <button type="submit" name="theme" value="dark" class="material-symbols-outlined text-sm">dark_mode</button>
+            </form>
+        </div>
+    </div>
+    <script src="{% static 'clustering/js/theme.js' %}"></script>
+    <script src="{% static 'clustering/js/i18n.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

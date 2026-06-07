@@ -1,0 +1,34 @@
+{% extends "clustering/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Profile" %} — ClustMetaLearn{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-title-lg font-bold mb-6">{% trans "Profile Settings" %}</h1>
+    <form method="post" enctype="multipart/form-data" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 space-y-4">
+        {% csrf_token %}
+        <div class="flex items-center gap-4 mb-4">
+            {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="avatar" class="w-16 h-16 rounded-full object-cover border border-outline-variant">
+            {% else %}
+            <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center">
+                <span class="material-symbols-outlined text-3xl text-on-surface-variant">person</span>
+            </div>
+            {% endif %}
+            <div>
+                <p class="font-semibold">{{ user.username }}</p>
+                <p class="text-sm text-on-surface-variant">{{ user.email|default:"" }}</p>
+            </div>
+        </div>
+        {% for field in form %}
+        <div>
+            <label class="block text-sm font-medium text-on-surface-variant mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="text-error text-xs mt-1">{{ field.errors.0 }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="bg-primary text-on-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary-container">
+            {% trans "Save Profile" %}
+        </button>
+    </form>
+</div>
+{% endblock %}

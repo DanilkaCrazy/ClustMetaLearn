@@ -1,0 +1,115 @@
+{% extends "clustering/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Dashboard" %} — ClustMetaLearn{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex flex-wrap justify-between items-center gap-4">
+        <div>
+            <h1 class="text-title-lg font-bold">{% trans "Dashboard" %}</h1>
+            <p class="text-on-surface-variant">{% trans "Your clustering experiments overview" %}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            {% include "clustering/includes/export_buttons.html" %}
+            <a href="{% url 'clustering:upload' %}" class="bg-primary text-on-primary px-4 py-2 rounded-lg flex items-center gap-2 btn-primary">
+                <span class="material-symbols-outlined text-sm">add</span> {% trans "New Experiment" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 card-hover">
+            <p class="text-xs uppercase text-on-surface-variant font-semibold">{% trans "Total Analyses" %}</p>
+            <p class="text-3xl font-bold text-primary mt-1">{{ stats.total }}</p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 card-hover">
+            <p class="text-xs uppercase text-on-surface-variant font-semibold">{% trans "Successful Tasks" %}</p>
+            <p class="text-3xl font-bold text-secondary mt-1">{{ stats.success_count }}</p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 card-hover">
+            <p class="text-xs uppercase text-on-surface-variant font-semibold">{% trans "Failed Tasks" %}</p>
+            <p class="text-3xl font-bold text-error mt-1">{{ stats.failed_count }}</p>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 card-hover">
+            <p class="text-xs uppercase text-on-surface-variant font-semibold">{% trans "Average ARI" %}</p>
+            <p class="text-3xl font-bold text-on-surface mt-1">{% if stats.avg_ari %}{{ stats.avg_ari|floatformat:3 }}{% else %}N/A{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% if chart_daily_json %}
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 card-hover">
+            <h3 class="text-title-md font-semibold mb-2 text-on-surface">{% trans "Tasks per Day" %}</h3>
+            <div id="chart-daily" class="chart-container" style="min-height:260px"><div class="skeleton h-64"></div></div>
+        </div>
+        {% endif %}
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 card-hover">
+            <h3 class="text-title-md font-semibold mb-3 text-on-surface">{% trans "Top Algorithms Used" %}</h3>
+            {% if stats.top_algorithms %}
+            <ul class="space-y-2">
+                {% for algo, count in stats.top_algorithms %}
+                <li class="flex justify-between items-center p-2 bg-surface-container-low rounded-lg">
+                    <span class="font-medium text-on-surface">{{ algo|default:"N/A" }}</span>
+                    <span class="text-sm text-on-surface-variant">{{ count }} {% trans "times" %}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-on-surface-variant text-sm">{% trans "No data yet" %}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+        <div class="p-4 border-b border-outline-variant flex justify-between items-center">
+            <h3 class="text-title-md font-semibold text-on-surface">{% trans "Recent Tasks" %}</h3>
+        </div>
+        {% if last_tasks %}
+        <div class="divide-y divide-outline-variant">
+            {% for task in last_tasks %}
+            <div class="p-4 flex flex-wrap justify-between items-center gap-2 hover:bg-surface-container-low/50">
+                <div>
+                    <p class="font-medium text-on-surface">{{ task.file_name }}</p>
+                    <p class="text-xs text-on-surface-variant">{{ task.created_at|date:"M d, Y H:i" }} · {{ task.get_status_display }}{% if task.ari_prediction %} · ARI {{ task.ari_prediction|floatformat:3 }}{% endif %}</p>
+                </div>
+                <div class="flex gap-2 items-center">
+                    {% if task.status == 'success' %}
+                    <a href="{% url 'clustering:recommend' task.id %}" class="text-primary text-sm hover:underline">{% trans "Recommendation" %}</a>
+                    <a href="{% url 'clustering:analyze' task.id %}" class="text-secondary text-sm hover:underline">{% trans "Analysis" %}</a>
+                    <a href="{% url 'clustering:evolve' task.id %}" class="text-on-surface-variant text-sm hover:underline">{% trans "Evolution" %}</a>
+                    {% endif %}
+                    <a href="{% url 'clustering:export_txt' task.id %}?scope=single" class="text-on-surface-variant hover:text-primary" title="{% trans 'Download report' %}">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-12 text-center">
+            <span class="material-symbols-outlined text-5xl text-on-surface-variant mb-4">science</span>
+            <p class="text-on-surface-variant mb-4">{% trans "Upload your first dataset to get clustering recommendations." %}</p>
+            <a href="{% url 'clustering:upload' %}" class="bg-primary text-on-primary px-6 py-2 rounded-lg btn-primary">{% trans "Upload Dataset" %}</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% if chart_daily_json %}
+{{ chart_daily_json|json_script:"chart-daily-data" }}
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+{% if chart_daily_json %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('chart-daily');
+    var dataEl = document.getElementById('chart-daily-data');
+    if (el && dataEl && window.Plotly) {
+        var skeleton = el.querySelector('.skeleton');
+        if (skeleton) skeleton.remove();
+        var fig = JSON.parse(dataEl.textContent);
+        Plotly.newPlot(el, fig.data, fig.layout, window.CMLCharts.plotOptions);
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

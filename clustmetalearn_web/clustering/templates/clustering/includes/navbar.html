@@ -1,0 +1,29 @@
+{% load i18n %}
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-margin-desktop bg-surface-container-lowest h-16 border-b border-outline-variant shadow-sm">
+    <a href="{% url 'clustering:index' %}" class="flex items-center gap-2 text-title-lg font-bold text-primary">
+        <span class="material-symbols-outlined">hub</span> ClustMetaLearn
+    </a>
+    <div class="flex items-center gap--2 md:gap-4 text-sm">
+        {% if user.is_authenticated %}
+            <a href="{% url 'clustering:dashboard' %}" class="text-on-surface-variant hover:text-primary hidden sm:inline">{% trans "Dashboard" %}</a>
+            <a href="{% url 'clustering:upload' %}" class="text-on-surface-variant hover:text-primary hidden sm:inline">{% trans "Upload" %}</a>
+            <a href="{% url 'clustering:profile' %}" class="text-on-surface-variant hover:text-primary">{{ user.username }}</a>
+            <form method="post" action="{% url 'clustering:logout' %}" class="inline">{% csrf_token %}
+                <button type="submit" class="text-on-surface-variant hover:text-primary">{% trans "Logout" %}</button>
+            </form>
+        {% else %}
+            <a href="{% url 'clustering:login' %}" class="text-on-surface-variant hover:text-primary">{% trans "Login" %}</a>
+            <a href="{% url 'clustering:register' %}" class="bg-primary text-on-primary px-3 py-1 rounded btn-primary">{% trans "Register" %}</a>
+        {% endif %}
+        <div class="flex items-center gap-1 border-l border-outline-variant pl-3 ml-1">
+            <form method="post" action="{% url 'clustering:set_language' %}" class="inline flex gap-1" id="lang-form">{% csrf_token %}
+                <button type="submit" name="language" value="en" class="lang-btn {% if user_language == 'en' %}active{% endif %}">EN</button>
+                <button type="submit" name="language" value="ru" class="lang-btn {% if user_language == 'ru' %}active{% endif %}">RU</button>
+            </form>
+            <form method="post" action="{% url 'clustering:set_theme' %}" class="inline flex gap-1 ml-2" id="theme-form">{% csrf_token %}
+                <button type="submit" name="theme" value="light" class="material-symbols-outlined text-on-surface-variant hover:text-primary text-lg" title="{% trans 'Light theme' %}">light_mode</button>
+                <button type="submit" name="theme" value="dark" class="material-symbols-outlined text-on-surface-variant hover:text-primary text-lg" title="{% trans 'Dark theme' %}">dark_mode</button>
+            </form>
+        </div>
+    </div>
+</nav>

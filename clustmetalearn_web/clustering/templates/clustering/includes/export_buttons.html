@@ -1,0 +1,22 @@
+{% load i18n %}
+<div class="export-dropdown" id="export-dropdown">
+    <button type="button" class="text-sm bg-surface-container text-on-surface px-3 py-1.5 rounded-lg border border-outline-variant hover:bg-surface-container-high flex items-center gap-1" onclick="this.parentElement.classList.toggle('open')">
+        <span class="material-symbols-outlined text-sm">download</span> {% trans "Export" %}
+    </button>
+    <div class="export-menu">
+        {% if task %}
+        <a href="{% url 'clustering:export_txt' task.id %}?scope=single">{% trans "Current experiment (TXT)" %}</a>
+        <a href="{% url 'clustering:export_pdf' task.id %}?scope=single">{% trans "Current experiment (PDF)" %}</a>
+        <hr class="border-outline-variant my-1">
+        {% endif %}
+        <a href="{% url 'clustering:export_all_txt' %}?scope=all">{% trans "All experiments (TXT)" %}</a>
+        <a href="{% url 'clustering:export_all_pdf' %}?scope=all">{% trans "All experiments (PDF)" %}</a>
+    </div>
+</div>
+<script>
+document.addEventListener('click', function(e) {
+    document.querySelectorAll('.export-dropdown.open').forEach(function(el) {
+        if (!el.contains(e.target)) el.classList.remove('open');
+    });
+});
+</script>
