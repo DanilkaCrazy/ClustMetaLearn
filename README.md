@@ -219,7 +219,16 @@ ClustMetaLearn/
 
 **Главный лендинг**
 
-![Главный лендинг](https://github.com/user-attachments/assets/fe3ff7d5-6084-4018-b70f-7f64c6751ac4)
+![Главный лендинг](https://github.com/user-attachments/assets/e8063e47-49ab-4397-8069-9d1a16b34461)
+
+**Страница авторизации (Вход)**
+
+![Страница входа](https://github.com/user-attachments/assets/8365c35c-ad89-4494-b7d0-80ea3f49c497)
+
+**Страница регистрации**
+
+![Страница регистрации](https://github.com/user-attachments/assets/c24174ae-870b-41e9-93f6-60095d117759)
+
 
 **Панель управления**
 
