@@ -26,34 +26,32 @@
 
 ## 🏗️ Архитектура
 
-```mermaid
 flowchart TD
-    User[("Пользователь\n(CSV / .bin / Kaggle / HF)")] --> Upload[Загрузка датасета]
-    Upload --> Extract[Извлечение мета-признаков]
+    User[("Пользователь\n(CSV / .bin / Kaggle / HF)")] --> Upload["Загрузка датасета"]
+    Upload --> Extract["Извлечение мета-признаков"]
     
-    subgraph META[Мета-модели]
-        Extract --> Stats[Статистика (mean, std, skewness…)]
-        Extract --> Topo[Топология (Betti, persistent entropy)]
-        Extract --> PCA[PCA проекции]
-        Stats & Topo & PCA --> Normalize[Нормализация]
-        Normalize --> CVIsel[Модель CVIsel]
-        Normalize --> AlgRank[Модель AlgRank]
-        Normalize --> Surrogate[Суррогат ARI]
+    subgraph META["Мета-модели"]
+        Extract --> Stats["Статистика (mean, std, skewness)"]
+        Extract --> Topo["Топология (Betti, persistent entropy)"]
+        Extract --> PCA["PCA проекции"]
+        Stats & Topo & PCA --> Normalize["Нормализация"]
+        Normalize --> CVIsel["Модель CVIsel"]
+        Normalize --> AlgRank["Модель AlgRank"]
+        Normalize --> Surrogate["Суррогат ARI"]
     end
 
-    CVIsel --> Metric[Рек. метрика: Silhouette / Calinski / Davies]
-    AlgRank --> Algorithm[Рек. алгоритм: K-Means / HDBSCAN / Agglomerative…]
-    Surrogate --> ARI[Ожидаемый ARI]
-    Algorithm --> Hyper[Сужение гиперпараметров]
+    CVIsel --> Metric["Рек. метрика: Silhouette / Calinski / Davies"]
+    AlgRank --> Algorithm["Рек. алгоритм: K-Means / HDBSCAN / Agglomerative"]
+    Surrogate --> ARI["Ожидаемый ARI"]
+    Algorithm --> Hyper["Сужение гиперпараметров"]
     
-    Hyper --> Option{Эволюция?}
-    Option -- Да --> Evolve[Эволюционный поиск пайплайна]
-    Option -- Нет --> Result[Отчёт / Экспорт]
+    Hyper --> Option{"Эволюция?"}
+    Option -- Да --> Evolve["Эволюционный поиск пайплайна"]
+    Option -- Нет --> Result["Отчёт / Экспорт"]
     Evolve --> Result
 
-    Result --> Visual[Интерактивные графики\n(PCA, Heatmap, Histograms)]
-    Result --> Export[Экспорт TXT/PDF]
-```
+    Result --> Visual["Интерактивные графики\n(PCA, Heatmap, Histograms)"]
+    Result --> Export["Экспорт TXT/PDF"]
 
 Платформа построена как **модульный пайплайн**:
 - **Извлечение мета-признаков** — из CSV или бинарного .bin.
