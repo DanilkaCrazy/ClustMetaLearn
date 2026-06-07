@@ -219,7 +219,8 @@ ClustMetaLearn/
 ## 🖼️ Примеры интерфейса
 
 **Главный лендинг**
-![Главный лендинг](<img width="1243" height="668" alt="image" src="https://github.com/user-attachments/assets/acdff87e-d2df-4836-9729-b18bf6b5ef47" />)
+![Главный лендинг](<img width="627" height="311" alt="Снимок экрана 2026-06-07 180541" src="https://github.com/user-attachments/assets/fe3ff7d5-6084-4018-b70f-7f64c6751ac4" />)
+
 
 ![Панель управления](<img width="1248" height="668" alt="image" src="https://github.com/user-attachments/assets/0d484dda-4fb9-43a4-9a5c-487c6942d9ce" />)
 
