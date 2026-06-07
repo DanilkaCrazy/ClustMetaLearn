@@ -1,0 +1,3 @@
+domain,target_task,predicted_cvi,predicted_algorithm,top3_algorithms,predicted_ari
+Bioinformatics,High-dimensional biological profiles,Silhouette,gmm,"kmeans,gmm,minibatch_kmeans",0.6854003210878579
+Text,Stylometry and document embeddings,Silhouette,kmeans,"kmeans,gmm,minibatch_kmeans",0.6804676580294766
