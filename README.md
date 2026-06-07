@@ -5,7 +5,6 @@
 [![Celery](https://img.shields.io/badge/Celery-5.3-orange?logo=celery)](https://docs.celeryq.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com/)
 [![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?logo=plotly)](https://plotly.com/)
-[![License](https://img.shields.io/badge/License-LGPL-3.0-blue.svg)](LICENSE)
 
 **ClustMetaLearn** — система мета-обучения для автоматического подбора стратегии кластеризации табличных данных. Она анализирует датасет, вычисляет 20+ мета-признаков (статистических, топологических, проекционных), рекомендует внутреннюю метрику качества, оптимальный алгоритм, сужает гиперпараметры и при необходимости запускает эволюционный поиск полного пайплайна (предобработка + кластеризация).
 
