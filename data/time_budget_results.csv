@@ -1,4 +1,0 @@
-strategy,avg_fitness_achieved,execution_time_sec,budget_passed
-Baseline grid,0.6080170297014391,45.0,True
-SMBO surrogate,0.6713503630347725,18.0,True
-SMBO + bandit prior,0.6913503630347725,15.0,True

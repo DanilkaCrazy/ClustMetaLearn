@@ -1,7 +1,0 @@
-protocol,method,n_datasets,top1_accuracy,top2_accuracy,top3_accuracy
-test_meta_holdout,majority_algorithm,32,0.28125,,
-test_meta_holdout,always_kmeans,32,0.1875,,
-test_meta_holdout,always_agglomerative,32,0.28125,,
-test_meta_holdout,always_gmm,32,0.40625,,
-test_meta_holdout,always_minibatch_kmeans,32,0.125,,
-test_meta_holdout,random_uniform_expected,32,0.25,0.5,0.75
