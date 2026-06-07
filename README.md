@@ -1,182 +1,236 @@
-# ClustMetaLearn – автоматический подбор стратегии кластеризации
+# 🧠 ClustMetaLearn
 
-ClustMetaLearn – это система мета-обучения для табличных данных. Она анализирует датасет, вычисляет мета-признаки, рекомендует внутреннюю метрику качества, оптимальный алгоритм кластеризации, сужает диапазон гиперпараметров и при необходимости запускает эволюционный поиск полного пайплайна (предобработка + кластеризация).
+[![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-4.2-green?logo=django)](https://www.djangoproject.com/)
+[![Celery](https://img.shields.io/badge/Celery-5.3-orange?logo=celery)](https://docs.celeryq.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com/)
+[![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?logo=plotly)](https://plotly.com/)
+[![License](https://img.shields.io/badge/License-LGPL-3.0-blue.svg)](LICENSE)
+
+**ClustMetaLearn** — система мета-обучения для автоматического подбора стратегии кластеризации табличных данных. Она анализирует датасет, вычисляет 20+ мета-признаков (статистических, топологических, проекционных), рекомендует внутреннюю метрику качества, оптимальный алгоритм, сужает гиперпараметры и при необходимости запускает эволюционный поиск полного пайплайна (предобработка + кластеризация).
 
 Проект включает:
+- CLI-инструмент для исследований и скриптовой интеграции.
+- Веб-приложение на Django с дашбордом, визуализациями, импортом с Kaggle/Hugging Face, тёмной темой, мультиязычностью (RU/EN) и экспортом отчётов (TXT/PDF).
 
-- CLI-инструмент – для исследований и интеграции в скрипты.
-- Веб-приложение на Django – удобный интерфейс с визуализациями, поддержкой загрузки файлов, мультиязычностью (RU/EN) и экспортом отчётов в TXT/PDF.
+## 📋 Содержание
 
-## Научно-практическое обоснование
+- [Архитектура](#-архитектура)
+- [Научно-практическое обоснование](#-научно-практическое-обоснование)
+- [Быстрый запуск (Docker)](#-быстрый-запуск-docker)
+- [Локальная разработка](#-локальная-разработка)
+- [Использование CLI](#-использование-cli)
+- [Взаимодействие с веб-приложением](#-взаимодействие-с-веб-приложением)
+- [Структура проекта](#-структура-проекта)
+- [Примеры интерфейса](#-примеры-интерфейса)
+
+## 🏗️ Архитектура
+
+```mermaid
+flowchart TD
+    User[("Пользователь\n(CSV / .bin / Kaggle / HF)")] --> Upload[Загрузка датасета]
+    Upload --> Extract[Извлечение мета-признаков]
+    
+    subgraph META[Мета-модели]
+        Extract --> Stats[Статистика (mean, std, skewness…)]
+        Extract --> Topo[Топология (Betti, persistent entropy)]
+        Extract --> PCA[PCA проекции]
+        Stats & Topo & PCA --> Normalize[Нормализация]
+        Normalize --> CVIsel[Модель CVIsel]
+        Normalize --> AlgRank[Модель AlgRank]
+        Normalize --> Surrogate[Суррогат ARI]
+    end
+
+    CVIsel --> Metric[Рек. метрика: Silhouette / Calinski / Davies]
+    AlgRank --> Algorithm[Рек. алгоритм: K-Means / HDBSCAN / Agglomerative…]
+    Surrogate --> ARI[Ожидаемый ARI]
+    Algorithm --> Hyper[Сужение гиперпараметров]
+    
+    Hyper --> Option{Эволюция?}
+    Option -- Да --> Evolve[Эволюционный поиск пайплайна]
+    Option -- Нет --> Result[Отчёт / Экспорт]
+    Evolve --> Result
+
+    Result --> Visual[Интерактивные графики\n(PCA, Heatmap, Histograms)]
+    Result --> Export[Экспорт TXT/PDF]
+```
+
+Платформа построена как **модульный пайплайн**:
+- **Извлечение мета-признаков** — из CSV или бинарного .bin.
+- **Нормализация** и применение предобученных моделей (CVIsel, AlgRank, суррогат ARI).
+- **Опциональный эволюционный поиск** на основе TPOT (генетические алгоритмы).
+- **Веб-интерфейс** — Django + Celery + Plotly.
+
+## 📊 Научно-практическое обоснование
 
 ### Актуальность
-Выбор алгоритма кластеризации – трудоёмкая задача, отнимающая до 80% времени аналитика. Существующие AutoML-системы ориентированы на задачи с учителем, а методы мета-обучения для кластеризации фрагментарны и не интегрированы в промышленные пайплайны. ClustMetaLearn заполняет этот пробел, предлагая готовое решение с открытым кодом.
+Выбор алгоритма кластеризации и настройка гиперпараметров отнимает до 80% времени исследователя. Существующие AutoML-системы ориентированы на задачи с учителем, а методы мета-обучения для кластеризации фрагментарны и не интегрированы в промышленные пайплайны. ClustMetaLearn заполняет этот пробел, предлагая готовое решение с открытым кодом.
 
 ### Новизна
-- Расширенный вектор из 20+ мета-признаков, включая топологические (Betti numbers, persistent entropy).
-- Двухуровневая мета-модель: CVIsel + AlgRank + суррогат ARI.
+- Расширенный вектор из 20+ мета-признаков, включая топологические характеристики (Betti numbers, persistent entropy).
+- Двухуровневая мета-модель: CVIsel → AlgRank → суррогат ARI.
 - Открытая платформа с CLI и веб-интерфейсом.
 
 ### Практическая значимость
-- Снижение времени подбора гиперпараметров на 70% при сохранении качества кластеризации.
-- Готовые сценарии: разведка данных, автоматизация пайплайнов, образование.
+- Снижение времени подбора гиперпараметров в среднем на 70% при сохранении качества кластеризации.
+- Сценарии: разведка данных, автоматизация пайплайнов, образование.
+- Подтверждённый интерес от индустрии (запросы на интеграцию) и научного сообщества (призовые места на хакатонах).
 
-## Установка и настройка
+## 🐳 Быстрый запуск (Docker)
 
-### 1. Клонирование репозитория
+Самый простой способ запустить веб-приложение вместе с PostgreSQL, Redis и Celery — использовать Docker Compose.
 
 ```bash
 git clone https://github.com/DanilkaCrazy/ClustMetaLearn.git
-cd ClustMetaLearn/clustmetalearn_web   # если репозиторий уже содержит эту папку
+cd ClustMetaLearn/clustmetalearn_web
 
-2. Создание виртуального окружения и установка зависимостей
-bash
+# Создайте .env файл (см. пример ниже)
+echo "USE_POSTGRES=True" > .env
+echo "USE_CELERY=True" >> .env
+echo "DJANGO_SECRET_KEY=supersecretkey" >> .env
+
+docker-compose up --build
+```
+
+После запуска:
+- **Веб-приложение:** `http://localhost:8000`
+- **PostgreSQL:** порт `5432` (внутри контейнера)
+- **Redis:** порт `6379`
+
+Для остановки: `docker-compose down`.
+
+## 🖥️ Локальная разработка
+
+Для запуска без Docker (SQLite, синхронная обработка):
+
+```bash
+# Перейдите в папку веб-приложения
+cd clustmetalearn_web
+
+# Создайте виртуальное окружение
 python -m venv .venv
 source .venv/bin/activate      # Linux/macOS
 .venv\Scripts\activate         # Windows
 
+# Установите зависимости
 pip install -r requirements.txt
-3. Настройка переменных окружения
-Создайте файл .env в корне веб-приложения:
 
-bash
-# Для работы с PostgreSQL (опционально, по умолчанию SQLite)
-USE_POSTGRES=False
-
-# Для Celery (по умолчанию синхронное выполнение)
-USE_CELERY=False
-
-# Ключи Kaggle (требуются для импорта датасетов)
-KAGGLE_USERNAME=your_username
-KAGGLE_KEY=your_api_key
-
-# Секретный ключ Django (для продакшена обязательно сменить)
-DJANGO_SECRET_KEY=supersecretkey
-4. Компиляция переводов (для веб-приложения)
-bash
-python manage.py compilemessages
-5. Миграции базы данных
-bash
+# Примените миграции
 python manage.py migrate
-python manage.py createsuperuser   # опционально
-Запуск исследовательского пайплайна (CLI)
-Рекомендация для нового датасета
-CSV-файл:
 
-bash
-clust-meta recommend path/to/data.csv --models-dir models
-Если в CSV есть столбец с метками (и его нужно исключить):
+# Скомпилируйте переводы
+python manage.py compilemessages
 
-bash
-clust-meta recommend path/to/data.csv --models-dir models --label-column target
-Бинарный файл (.bin):
-
-bash
-clust-meta recommend path/to/data.bin \
-  --input-format bin \
-  --n-samples 1000 \
-  --n-features 20 \
-  --models-dir models
-Эволюционный подбор пайплайна
-CSV:
-
-bash
-python -m clustmetalearn.tpot_clustering path/to/data.csv \
-  --cvisel-models-dir models \
-  --generations 10 \
-  --population 20
-Бинарный (data.bin) с метками (для внешней оценки ARI):
-
-bash
-python -m clustmetalearn.tpot_clustering path/to/data.bin \
-  --input-format bin \
-  --n-samples 1000 \
-  --n-features 20 \
-  --label-bin path/to/label.bin \
-  --metric ari \
-  --generations 10 \
-  --population 20
-Примечание: Если у вас не установлен основной пакет clustmetalearn, выполните:
-
-bash
-pip install -e ../ClustMetaLearn
-Без него эволюция будет работать в режиме заглушки (имитация прогресса).
-
-Запуск веб-приложения
-Локальный запуск (SQLite, без Docker)
-bash
+# Запустите сервер
 python manage.py runserver
-После запуска откройте браузер по адресу http://127.0.0.1:8000. Регистрация и вход обязательны для работы с дашбордом.
+```
 
-Запуск с Docker (PostgreSQL + Redis + Celery)
-Убедитесь, что в .env установлены:
+Приложение будет доступно на `http://127.0.0.1:8000`. Для доступа к CLI убедитесь, что пакет `clustmetalearn` установлен (см. раздел CLI).
 
-text
-USE_POSTGRES=True
-USE_CELERY=True
-Затем выполните:
+## 🔧 Использование CLI
 
-bash
-docker-compose up --build
-Веб-приложение станет доступно на http://localhost:8000.
+CLI-инструмент позволяет получать рекомендации и запускать эволюцию без веб-интерфейса.
 
-Функциональность веб-приложения
-После входа в систему вы сможете:
+**Рекомендация для CSV:**
+```bash
+clust-meta recommend data.csv --models-dir models
+```
 
-Загрузить датасет (CSV или бинарный .bin) или импортировать с Kaggle / Hugging Face по имени или прямой ссылке.
+**Рекомендация для .bin:**
+```bash
+clust-meta recommend data.bin --input-format bin --n-samples 1000 --n-features 20 --models-dir models
+```
 
-Посмотреть рекомендации – метрика, алгоритм, топ-3, ожидаемый ARI, гиперпараметры.
+**Эволюционный поиск:**
+```bash
+python -m clustmetalearn.tpot_clustering data.csv --cvisel-models-dir models --generations 10 --population 20
+```
 
-Запустить эволюцию – указать поколения, размер популяции, метрику fitness, стратегию бандита. Процесс отображается на отдельной странице с прогресс-баром.
+Если пакет `clustmetalearn` не установлен, выполните:
+```bash
+pip install -e ../ClustMetaLearn   # из папки веб-приложения
+```
+Без пакета эволюция работает в режиме заглушки (имитация прогресса).
 
-Проанализировать мета-признаки – интерактивные графики (PCA, тепловая карта корреляций, гистограммы) с помощью Plotly.
+## 🎮 Взаимодействие с веб-приложением
 
-Экспортировать отчёт в TXT или PDF для одного эксперимента или для всех.
+После регистрации и входа вы получаете доступ к:
 
-Управлять профилем – аватар, телефон, компания, язык (RU/EN), тёмная/светлая тема.
+- **Дашборду** — статистика по вашим задачам, график активности, список последних экспериментов.
+- **Загрузке датасетов** — файлом (CSV/.bin).
+- **Рекомендациям** — метрика, алгоритм, топ‑3, ожидаемый ARI, гиперпараметры.
+- **Анализу** — интерактивные графики (PCA, тепловая карта корреляций, гистограммы) с помощью Plotly.
+- **Эволюции** — настройка поколений, размера популяции, метрики fitness, стратегии бандита; прогресс-бар и статус.
+- **Экспорту отчётов** — TXT или PDF для одного эксперимента или всех.
+- **Профилю** — аватар, телефон, компания, тема (светлая/тёмная), язык (RU/EN).
 
-Изучать документацию – описание пайплайна, научно-популярные статьи, примеры использования.
+## 📁 Структура проекта
 
-Смена языка и темы
-Кнопки переключения языка и темы находятся в верхней панели навигации. Выбранные настройки сохраняются в профиле пользователя и применяются сразу (без перезагрузки страницы).
+```text
+ClustMetaLearn/
+├── clustmetalearn_web/                # Веб-приложение Django
+│   ├── clustering/                    # Основное приложение
+│   │   ├── migrations/                # Миграции БД
+│   │   ├── static/                    # CSS, JS (theme.js, i18n.js, upload.js)
+│   │   ├── templates/                 # HTML-шаблоны
+│   │   │   ├── clustering/
+│   │   │   │   ├── includes/          # navbar, sidebar, footer
+│   │   │   │   ├── base.html
+│   │   │   │   ├── index.html         # лендинг
+│   │   │   │   ├── dashboard.html
+│   │   │   │   ├── upload.html
+│   │   │   │   ├── recommend.html
+│   │   │   │   ├── analyze.html
+│   │   │   │   ├── evolve.html
+│   │   │   │   ├── profile.html
+│   │   │   │   ├── about.html
+│   │   │   │   ├── docs.html
+│   │   │   │   ├── login.html
+│   │   │   │   └── register.html
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── forms.py                  # DatasetUploadForm, ProfileForm
+│   │   ├── models.py                 # UserProfile, ClusteringTask, EvolutionarySession
+│   │   ├── views.py                  # Все представления (лендинг, загрузка, эволюция…)
+│   │   ├── tasks.py                  # Celery задачи (эволюция, извлечение признаков)
+│   │   ├── utils.py                  # extract_meta_features, predict_clustering_strategy
+│   │   ├── dataset_import.py         # Загрузка с Kaggle/Hugging Face
+│   │   ├── reports.py                # Генерация TXT/PDF отчётов
+│   │   └── urls.py                   # Маршруты
+│   ├── clustmetalearn_web/           # Настройки Django
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   ├── celery.py
+│   │   └── wsgi.py
+│   ├── models/                       # Предобученные модели (.joblib, .pkl)
+│   ├── media/                        # Загруженные пользователями файлы
+│   ├── locale/                       # Переводы (ru/LC_MESSAGES)
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── manage.py
+├── data/                             # Артефакты работы пайплайна (мета-признаки, результаты SMBO)
+├── reports/                          # Отчёты по оценке мета-моделей
+├── README.md
+└── LICENSE
+```
 
-Экспорт отчётов
-На страницах результата, анализа и дашборда есть кнопки "Экспорт в TXT" и "Экспорт в PDF". Выберите scope: только текущий эксперимент или все эксперименты пользователя. Отчёт включает мета-признаки, рекомендации, гиперпараметры, историю эволюции (если есть), а для всех экспериментов – сводную таблицу и статистику.
+## 🖼️ Примеры интерфейса
 
-Прямые ссылки (для разработчиков):
+**Главный лендинг**
+![Главный лендинг](<img width="1243" height="668" alt="image" src="https://github.com/user-attachments/assets/acdff87e-d2df-4836-9729-b18bf6b5ef47" />)
 
-/export/<task_id>/txt/
+![Панель управления](<img width="1248" height="668" alt="image" src="https://github.com/user-attachments/assets/0d484dda-4fb9-43a4-9a5c-487c6942d9ce" />)
 
-/export/<task_id>/pdf/
+**Дашборд с графиками**
+![Дашборд](<img width="301" height="452" alt="image" src="https://github.com/user-attachments/assets/b1d7d1d1-8af9-4691-b8a2-20515b8c3b0b" />)
 
-/export/all/txt/?scope=all
+![Эволюция](<img width="1266" height="601" alt="image" src="https://github.com/user-attachments/assets/92faa67f-fcc8-4dcf-b49f-b515175ae274" />)
 
-/export/all/pdf/?scope=all
+---
+**Страница анализа (интерактивные графики)**
+![Анализ](<img width="1256" height="654" alt="image" src="https://github.com/user-attachments/assets/f29dbcb0-1935-431a-ace1-8a942c8a0a8c" />)
 
-Устранение неполадок
-1. Ошибка pg_config not found при установке psycopg2-binary
-Решение: для локальной разработки переключитесь на SQLite (в .env поставьте USE_POSTGRES=False и удалите psycopg2-binary из requirements.txt), либо установите PostgreSQL и добавьте путь к pg_config в PATH.
 
-2. Тёмная тема не применяется или нечитаема
-Проверьте, что в браузере не включено принудительное переопределение цветов. Убедитесь, что в settings.py определён словарь DARK_DESIGN_COLORS. При необходимости очистите кэш браузера (Ctrl+F5).
-
-3. Графики на странице анализа не отображаются
-Откройте консоль разработчика (F12) – возможны ошибки JavaScript. Убедитесь, что библиотека Plotly загружается с CDN. Проверьте наличие блока <div id="charts-data"> с корректными данными.
-
-4. Эволюция не запускается (кнопка неактивна)
-Проверьте, что вы выбрали существующую задачу (после загрузки датасета). В логах терминала (или Docker) посмотрите, не возникает ли исключение при вызове run_evolution. При отсутствии основного пакета должна работать заглушка.
-
-5. Ошибки импорта с Kaggle / Hugging Face
-Для Kaggle укажите корректные KAGGLE_USERNAME и KAGGLE_KEY в переменных окружения или поместите kaggle.json в ~/.kaggle/. Для Hugging Face убедитесь, что датасет публично доступен и его имя/ссылка введены верно. Временно отключите антивирус / брандмауэр, если загрузка обрывается.
-
-Структура артефактов (после работы пайплайна)
-models/ – предобученные модели (cvisel.joblib, algrank.joblib, ari_surrogate.pkl, hp_intervals.json).
-
-data/meta_features.csv – единая таблица мета-признаков.
-
-reports/meta_evaluation.txt – отчёт по качеству мета-моделей.
-
-data/smbo_results.csv, data/time_budget_results.csv – результаты оптимизации гиперпараметров.
-
-data/domain_testing_results.csv – проверка на доменных примерах (Bio/Text).
 
