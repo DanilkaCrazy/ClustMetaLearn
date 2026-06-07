@@ -218,19 +218,24 @@ ClustMetaLearn/
 ## 🖼️ Примеры интерфейса
 
 **Главный лендинг**
-![Главный лендинг](<img width="627" height="311" alt="Снимок экрана 2026-06-07 180541" src="https://github.com/user-attachments/assets/fe3ff7d5-6084-4018-b70f-7f64c6751ac4" />)
 
+![Главный лендинг](https://github.com/user-attachments/assets/fe3ff7d5-6084-4018-b70f-7f64c6751ac4)
 
-![Панель управления](<img width="1248" height="668" alt="image" src="https://github.com/user-attachments/assets/0d484dda-4fb9-43a4-9a5c-487c6942d9ce" />)
+**Панель управления**
+
+![Панель управления](https://github.com/user-attachments/assets/0d484dda-4fb9-43a4-9a5c-487c6942d9ce)
 
 **Дашборд с графиками**
-![Дашборд](<img width="301" height="452" alt="image" src="https://github.com/user-attachments/assets/b1d7d1d1-8af9-4691-b8a2-20515b8c3b0b" />)
 
-![Эволюция](<img width="1266" height="601" alt="image" src="https://github.com/user-attachments/assets/92faa67f-fcc8-4dcf-b49f-b515175ae274" />)
+![Дашборд](https://github.com/user-attachments/assets/b1d7d1d1-8af9-4691-b8a2-20515b8c3b0b)
 
----
+**Страница эволюции**
+
+![Эволюция](https://github.com/user-attachments/assets/92faa67f-fcc8-4dcf-b49f-b515175ae274)
+
 **Страница анализа (интерактивные графики)**
-![Анализ](<img width="1256" height="654" alt="image" src="https://github.com/user-attachments/assets/f29dbcb0-1935-431a-ace1-8a942c8a0a8c" />)
+
+![Анализ](https://github.com/user-attachments/assets/f29dbcb0-1935-431a-ace1-8a942c8a0a8c)
 
 
 
