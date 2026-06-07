@@ -242,7 +242,7 @@ ClustMetaLearn/
 
 ![Эволюция](https://github.com/user-attachments/assets/92faa67f-fcc8-4dcf-b49f-b515175ae274)
 
-**Страница анализа (интерактивные графики)**
+**Страница анализа**
 
 ![Анализ](https://github.com/user-attachments/assets/f29dbcb0-1935-431a-ace1-8a942c8a0a8c)
 
