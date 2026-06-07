@@ -28,7 +28,7 @@
 
 ```mermaid
 flowchart TD
-    User[("Пользователь\n(CSV / .bin / Kaggle / HF)")] --> Upload["Загрузка датасета"]
+    User[("Пользователь\n(CSV / .bin )")] --> Upload["Загрузка датасета"]
     Upload --> Extract["Извлечение мета-признаков"]
     
     subgraph META["Мета-модели"]
