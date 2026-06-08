@@ -246,14 +246,3 @@ ClustMetaLearn/
 
 ![Анализ](https://github.com/user-attachments/assets/f29dbcb0-1935-431a-ace1-8a942c8a0a8c)
 
-```mermaid
-flowchart TD
-    User[("User uploads dataset")] --> Prep[Preprocessing\n(missing values, scaling)]
-    Prep --> Meta[Extract meta-features\n(statistical, PCA, topological)]
-    Meta --> Model[Learning-to-Rank model]
-    Model --> Top3[Top-3 algorithms]
-    Model --> HP[Hyperparameter intervals]
-    Top3 --> Rec[Recommendation\n+ ARI prediction]
-    HP --> Rec
-    Rec --> Web[Web interface\n(visualisation, export)]
-```
