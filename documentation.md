@@ -1,5 +1,5 @@
 
-# Разработка и экспериментальная валидация системы автоматического выбора алгоритма кластеризации и сужения пространства гиперпараметров для табличных данных на основе мета-признаков датасета и meta-learning подхода с ранжированием моделей.
+## Разработка и экспериментальная валидация системы автоматического выбора алгоритма кластеризации и сужения пространства гиперпараметров для табличных данных на основе мета-признаков датасета и meta-learning подхода с ранжированием моделей.
 
 ## Содержание
 
@@ -182,7 +182,8 @@ SMAC (Sequential Model‑based Algorithm Configuration) [17] — метод ба
 
 Рассмотрим пользовательское взаимодействие с системой и ее отдельные компоненты (Рисунок 1).
 
-![alt text](image.png)
+![alt text](<img width="881" height="478" alt="Снимок экрана 2026-06-08 132827" src="https://github.com/user-attachments/assets/aa7d162f-3b18-447b-b54f-a898a07cfbff" />
+)
 
 **Рисунок 1 — Диаграмма взаимодействия с системой**
 
@@ -633,4 +634,4 @@ CLI-инструмент не требует веб-сервера и может
 18. Aupetit, M. (2014). Sanity Check for Class Coloring Based Evaluation of Dimension Reduction Techniques. *BELIV'14*, 134–141.
 19. Jeon, H., Aupetit, M., Shin, D., Cho, A., Park, S., Seo, J. (2025). Measuring the Validity of Clustering Validation Datasets. *IEEE Transactions on Pattern Analysis and Machine Intelligence*, 47(3), 1456–1471.
 20. Jeon, H., Aupetit, M., Shin, D., Cho, A., Park, S., Seo, J. (2022). Sanity Check for External Clustering Validation Benchmarks using Internal Validation Measures. *arXiv:2209.10042*.
-```
+
